@@ -64,6 +64,9 @@ trait NirGenStat { self: NirGenPhase =>
     private val buf          = mutable.UnrolledBuffer.empty[nir.Defn]
     def toSeq: Seq[nir.Defn] = buf
 
+    def posToLoc(pos: Position): Location.Location =
+      Location.LocData(pos.source.file.file.toPath, pos.line)
+
     def genClass(cd: ClassDef): Unit = {
       scoped(
         curClassSym := cd.symbol
@@ -79,8 +82,9 @@ trait NirGenStat { self: NirGenPhase =>
       val name   = genTypeName(sym)
       val fields = genStructFields(sym)
       val body   = cd.impl.body
+      val loc    = posToLoc(cd.pos)
 
-      buf += Defn.Struct(attrs, name, fields)
+      buf += Defn.Struct(attrs, name, fields, loc)
       genMethods(cd)
     }
 
@@ -92,14 +96,16 @@ trait NirGenStat { self: NirGenPhase =>
       def name   = genTypeName(sym)
       def parent = genClassParent(sym)
       def traits = genClassInterfaces(sym)
+      val loc = posToLoc(cd.pos)
+
 
       genClassFields(sym)
       genMethods(cd)
 
       buf += {
-        if (sym.isScalaModule) Defn.Module(attrs, name, parent, traits)
-        else if (sym.isInterface) Defn.Trait(attrs, name, traits)
-        else Defn.Class(attrs, name, parent, traits)
+        if (sym.isScalaModule) Defn.Module(attrs, name, parent, traits, loc)
+        else if (sym.isInterface) Defn.Trait(attrs, name, traits, loc)
+        else Defn.Class(attrs, name, parent, traits, loc)
       }
     }
 
@@ -160,8 +166,9 @@ trait NirGenStat { self: NirGenPhase =>
       for (f <- sym.info.decls if f.isField) {
         val ty   = genType(f.tpe, box = false)
         val name = genFieldName(f)
+        val loc = posToLoc(f.pos)
 
-        buf += Defn.Var(attrs, name, ty, Val.None)
+        buf += Defn.Var(attrs, name, ty, Val.None, loc)
       }
     }
 
@@ -191,10 +198,11 @@ trait NirGenStat { self: NirGenPhase =>
         val isStatic = owner.isExternModule || owner.isImplClass
         val sig      = genMethodSig(sym, isStatic)
         val params   = genParams(dd, isStatic)
+        val loc      = posToLoc(dd.pos)
 
         dd.rhs match {
           case EmptyTree =>
-            buf += Defn.Declare(attrs, name, sig)
+            buf += Defn.Declare(attrs, name, sig, loc)
 
           case _ if dd.name == nme.CONSTRUCTOR && owner.isExternModule =>
             validateExternCtor(dd.rhs)
@@ -205,11 +213,12 @@ trait NirGenStat { self: NirGenPhase =>
 
           case rhs if owner.isExternModule =>
             checkExplicitReturnTypeAnnotation(dd)
-            genExternMethod(attrs, name, sig, params, rhs)
+            genExternMethod(attrs, name, sig, params, rhs, loc)
 
           case rhs =>
             val body = genNormalMethodBody(dd, params, rhs, isStatic)
-            buf += Defn.Define(attrs, name, sig, body)
+            dd.pos
+            buf += Defn.Define(attrs, name, sig, body, loc)
         }
       }
     }
@@ -218,12 +227,13 @@ trait NirGenStat { self: NirGenPhase =>
                         name: nir.Global,
                         sig: nir.Type,
                         params: Seq[nir.Val.Local],
-                        rhs: Tree): Unit = {
+                        rhs: Tree,
+                        loc: Location.Location): Unit = {
       rhs match {
         case Apply(ref: RefTree, Seq()) if ref.symbol == ExternMethod =>
           val moduleName  = genTypeName(curClassSym)
           val externAttrs = Attrs(isExtern = true)
-          val externDefn  = Defn.Declare(externAttrs, name, sig)
+          val externDefn  = Defn.Declare(externAttrs, name, sig, loc)
 
           buf += externDefn
 
@@ -419,8 +429,9 @@ trait NirGenStat { self: NirGenPhase =>
           val params = genParams(apply, isStatic = true)
           val body =
             genNormalMethodBody(apply, params, apply.rhs, isStatic = true)
+          val loc = posToLoc(apply.pos)
 
-          buf += Defn.Define(attrs, name, sig, body)
+          buf += Defn.Define(attrs, name, sig, body, loc)
 
           Val.Global(name, Type.Ptr)
       }

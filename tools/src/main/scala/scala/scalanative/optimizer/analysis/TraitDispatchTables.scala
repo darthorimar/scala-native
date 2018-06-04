@@ -146,7 +146,7 @@ class TraitDispatchTables(top: Top) {
 
     dispatchOffset = offsets
     dispatchTy = Type.Ptr
-    dispatchDefn = Defn.Const(Attrs.None, dispatchName, value.ty, value)
+    dispatchDefn = Defn.Const(Attrs.None, dispatchName, value.ty, value, Location.NoLoc)//todo: location?
   }
 
   def markTraits(row: Array[Boolean], cls: Class): Unit = {
@@ -172,7 +172,7 @@ class TraitDispatchTables(top: Top) {
 
     classHasTraitTy = table.ty
     classHasTraitDefn =
-      Defn.Const(Attrs.None, classHasTraitName, table.ty, table)
+      Defn.Const(Attrs.None, classHasTraitName, table.ty, table, Location.NoLoc)//todo: location?
   }
 
   def initTraitHasTrait(): Unit = {
@@ -186,7 +186,7 @@ class TraitDispatchTables(top: Top) {
 
     traitHasTraitTy = table.ty
     traitHasTraitDefn =
-      Defn.Const(Attrs.None, traitHasTraitName, table.ty, table)
+      Defn.Const(Attrs.None, traitHasTraitName, table.ty, table, Location.NoLoc)//todo: location?
   }
 
   initDispatch()

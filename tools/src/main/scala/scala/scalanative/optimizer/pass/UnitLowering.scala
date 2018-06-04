@@ -15,7 +15,7 @@ class UnitLowering extends Pass {
 
   override def onDefn(defn: Defn) = {
     defn match {
-      case defn @ Defn.Define(_, _, Type.Function(_, retty), _) =>
+      case defn @ Defn.Define(_, _, Type.Function(_, retty), _, _) =>
         defnRetty = retty
       case _ =>
         ()
@@ -68,7 +68,7 @@ object UnitLowering extends PassCompanion {
   val unitTy    = Type.Struct(unitName member "layout", Seq(Type.Ptr))
   val unitConst = Val.Global(unitName member "type", Type.Ptr)
   val unitValue = Val.Struct(unitTy.name, Seq(unitConst))
-  val unitDefn  = Defn.Const(Attrs.None, unitName, unitTy, unitValue)
+  val unitDefn  = Defn.Const(Attrs.None, unitName, unitTy, unitValue, Location.NoLoc) //todo location?
 
   override val depends =
     Seq(unitName)

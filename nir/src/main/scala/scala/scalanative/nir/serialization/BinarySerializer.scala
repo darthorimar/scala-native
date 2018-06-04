@@ -188,59 +188,68 @@ final class BinarySerializer(buffer: ByteBuffer) {
   }
 
   private def putDefn(value: Defn): Unit = value match {
-    case Defn.Var(attrs, name, ty, value) =>
+    case Defn.Var(attrs, name, ty, value, loc) =>
       putInt(T.VarDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
       putVal(value)
 
-    case Defn.Const(attrs, name, ty, value) =>
+    case Defn.Const(attrs, name, ty, value, loc) =>
       putInt(T.ConstDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
       putVal(value)
 
-    case Defn.Declare(attrs, name, ty) =>
+    case Defn.Declare(attrs, name, ty, loc) =>
       putInt(T.DeclareDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
 
-    case Defn.Define(attrs, name, ty, insts) =>
+    case Defn.Define(attrs, name, ty, insts, loc) =>
       putInt(T.DefineDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
       putInsts(insts)
 
-    case Defn.Struct(attrs, name, members) =>
+    case Defn.Struct(attrs, name, members, loc) =>
       putInt(T.StructDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putTypes(members)
 
-    case Defn.Trait(attrs, name, ifaces) =>
+    case Defn.Trait(attrs, name, ifaces, loc) =>
       putInt(T.TraitDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putGlobals(ifaces)
 
-    case Defn.Class(attrs, name, parent, ifaces) =>
+    case Defn.Class(attrs, name, parent, ifaces, loc) =>
       putInt(T.ClassDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putGlobalOpt(parent)
       putGlobals(ifaces)
 
-    case Defn.Module(attrs, name, parent, ifaces) =>
+    case Defn.Module(attrs, name, parent, ifaces, loc) =>
       putInt(T.ModuleDefn)
+      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putGlobalOpt(parent)
       putGlobals(ifaces)
   }
+
 
   private def putGlobals(globals: Seq[Global]): Unit =
     putSeq(globals)(putGlobal)
@@ -251,6 +260,15 @@ final class BinarySerializer(buffer: ByteBuffer) {
     case Global.Top(id) => putInt(T.TopGlobal); putString(id)
     case Global.Member(n, id) =>
       putInt(T.MemberGlobal); putGlobal(n); putString(id)
+  }
+
+  private def putLoc(location: Location.Location): Unit = location match {
+    case Location.NoLoc =>
+      putInt(T.NoLoc)
+    case Location.LocData(file, line)  =>
+      putInt(T.LocData)
+      putString(file.toString)
+      putInt(line)
   }
 
   private def putLocal(local: Local): Unit = {

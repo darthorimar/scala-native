@@ -3,8 +3,9 @@ package nir
 package serialization
 
 import java.nio.ByteBuffer
-import scala.collection.mutable
+import java.nio.file.Paths
 
+import scala.collection.mutable
 import nir.serialization.{Tags => T}
 import Global.Member
 
@@ -178,28 +179,28 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
   private def getDefns(): Seq[Defn] = getSeq(getDefn)
   private def getDefn(): Defn = getInt match {
     case T.VarDefn =>
-      Defn.Var(getAttrs, getGlobal, getType, getVal)
+      Defn.Var(getAttrs, getGlobal, getType, getVal, getLoc)
 
     case T.ConstDefn =>
-      Defn.Const(getAttrs, getGlobal, getType, getVal)
+      Defn.Const(getAttrs, getGlobal, getType, getVal,getLoc)
 
     case T.DeclareDefn =>
-      Defn.Declare(getAttrs, getGlobal, getType)
+      Defn.Declare(getAttrs, getGlobal, getType, getLoc)
 
     case T.DefineDefn =>
-      Defn.Define(getAttrs, getGlobal, getType, getInsts)
+      Defn.Define(getAttrs, getGlobal, getType, getInsts, getLoc)
 
     case T.StructDefn =>
-      Defn.Struct(getAttrs, getGlobal, getTypes)
+      Defn.Struct(getAttrs, getGlobal, getTypes, getLoc)
 
     case T.TraitDefn =>
-      Defn.Trait(getAttrs, getGlobal, getGlobals)
+      Defn.Trait(getAttrs, getGlobal, getGlobals, getLoc)
 
     case T.ClassDefn =>
-      Defn.Class(getAttrs, getGlobal, getGlobalOpt, getGlobals)
+      Defn.Class(getAttrs, getGlobal, getGlobalOpt, getGlobals, getLoc)
 
     case T.ModuleDefn =>
-      Defn.Module(getAttrs, getGlobal, getGlobalOpt, getGlobals)
+      Defn.Module(getAttrs, getGlobal, getGlobalOpt, getGlobals, getLoc)
   }
 
   private def getGlobals(): Seq[Global]      = getSeq(getGlobal)
@@ -297,6 +298,11 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
   }
 
   private def getVals(): Seq[Val] = getSeq(getVal)
+  private def getLoc(): Location.Location = getInt match {
+    case T.NoLoc   => Location.NoLoc
+    case T.LocData =>
+      Location.LocData(Paths.get(getString), getInt)
+  }
   private def getVal(): Val = getInt match {
     case T.NoneVal   => Val.None
     case T.TrueVal   => Val.True

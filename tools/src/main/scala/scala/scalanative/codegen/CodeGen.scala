@@ -97,13 +97,13 @@ object CodeGen {
           env(n) match {
             case defn: Defn.Struct =>
               defn
-            case defn @ Defn.Var(attrs, _, _, _) =>
+            case defn @ Defn.Var(attrs, _, _, _, _) =>
               defn.copy(attrs.copy(isExtern = true), rhs = Val.None)
-            case defn @ Defn.Const(attrs, _, ty, _) =>
+            case defn @ Defn.Const(attrs, _, ty, _, _) =>
               defn.copy(attrs.copy(isExtern = true), rhs = Val.None)
-            case defn @ Defn.Declare(attrs, _, _) =>
+            case defn @ Defn.Declare(attrs, _, _, _) =>
               defn.copy(attrs.copy(isExtern = true))
-            case defn @ Defn.Define(attrs, _, _, _) =>
+            case defn @ Defn.Define(attrs, _, _, _, _) =>
               defn.copy(attrs.copy(isExtern = true), insts = Seq())
           }
         }
@@ -120,10 +120,10 @@ object CodeGen {
       case _ =>
         touch(n)
         env(n) match {
-          case Defn.Var(_, _, ty, _)     => ty
-          case Defn.Const(_, _, ty, _)   => ty
-          case Defn.Declare(_, _, sig)   => sig
-          case Defn.Define(_, _, sig, _) => sig
+          case Defn.Var(_, _, ty, _, _)     => ty
+          case Defn.Const(_, _, ty, _, _)   => ty
+          case Defn.Declare(_, _, sig, _)   => sig
+          case Defn.Define(_, _, sig, _, _) => sig
         }
     }
 
@@ -180,15 +180,15 @@ object CodeGen {
       }
 
     def genDefn(defn: Defn): Unit = defn match {
-      case Defn.Struct(attrs, name, tys) =>
+      case Defn.Struct(attrs, name, tys, loc) =>
         genStruct(attrs, name, tys)
-      case Defn.Var(attrs, name, ty, rhs) =>
+      case Defn.Var(attrs, name, ty, rhs, loc) =>
         genGlobalDefn(attrs, name, isConst = false, ty, rhs)
-      case Defn.Const(attrs, name, ty, rhs) =>
+      case Defn.Const(attrs, name, ty, rhs, loc) =>
         genGlobalDefn(attrs, name, isConst = true, ty, rhs)
-      case Defn.Declare(attrs, name, sig) =>
+      case Defn.Declare(attrs, name, sig, loc) =>
         genFunctionDefn(attrs, name, sig, Seq(), Fresh())
-      case Defn.Define(attrs, name, sig, insts) =>
+      case Defn.Define(attrs, name, sig, insts, loc) =>
         genFunctionDefn(attrs, name, sig, insts, Fresh(insts))
       case defn =>
         unsupported(defn)

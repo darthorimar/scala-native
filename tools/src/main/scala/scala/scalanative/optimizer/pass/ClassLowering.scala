@@ -18,9 +18,9 @@ class ClassLowering(implicit top: Top) extends Pass {
     super.onDefns(defns.filter {
       case _: Defn.Class =>
         false
-      case Defn.Declare(_, MethodRef(_: Class, _), _) =>
+      case Defn.Declare(_, MethodRef(_: Class, _), _, _) =>
         false
-      case Defn.Var(_, FieldRef(_: Class, _), _, _) =>
+      case Defn.Var(_, FieldRef(_: Class, _), _, _, _) =>
         false
       case defn =>
         true

@@ -212,4 +212,11 @@ object Tags {
   final val UnitVal   = 1 + GlobalVal
   final val ConstVal  = 1 + UnitVal
   final val StringVal = 1 + ConstVal
+
+  // Locations
+
+  final val Loc = Val + 32
+
+  final val NoLoc   = 1 + Loc
+  final val LocData = 1 + NoLoc
 }

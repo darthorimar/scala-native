@@ -15,9 +15,9 @@ class TraitLowering(implicit top: Top) extends Pass {
 
   override def onDefns(defns: Seq[Defn]): Seq[Defn] =
     defns.filter {
-      case _: Defn.Trait                              => false
-      case Defn.Declare(_, MethodRef(_: Trait, _), _) => false
-      case _                                          => true
+      case _: Defn.Trait                                 => false
+      case Defn.Declare(_, MethodRef(_: Trait, _), _, _) => false
+      case _                                             => true
     }
 }
 

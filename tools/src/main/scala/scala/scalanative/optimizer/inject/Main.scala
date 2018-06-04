@@ -53,10 +53,11 @@ class Main(entry: Global) extends Inject {
         Inst.Let(
           Op.Call(PrintStackTraceSig, PrintStackTrace, Seq(exc), Next.None)),
         Inst.Ret(Val.Int(1))
-      )
+      ),
+      Location.NoLoc //todo location?
     )
 
-    buf += Defn.Var(Attrs.None, stackBottomName, Type.Ptr, Val.Null)
+    buf += Defn.Var(Attrs.None, stackBottomName, Type.Ptr, Val.Null, Location.NoLoc) //todo location?
   }
 }
 
@@ -93,7 +94,7 @@ object Main extends InjectCompanion {
 
   val InitSig  = Type.Function(Seq(), Type.Unit)
   val Init     = Val.Global(Global.Top("scalanative_init"), Type.Ptr)
-  val InitDecl = Defn.Declare(Attrs.None, Init.name, InitSig)
+  val InitDecl = Defn.Declare(Attrs.None, Init.name, InitSig, Location.NoLoc)//todo location?
 
   val stackBottomName = Global.Top("__stack_bottom")
 

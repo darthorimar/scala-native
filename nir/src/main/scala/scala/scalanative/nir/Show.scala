@@ -32,6 +32,13 @@ object Show {
   final class NirShowBuilder(val builder: ShowBuilder) extends AnyVal {
     import builder._
 
+    def loc_(loc: Location.Location): Unit = loc match {
+      case Location.NoLoc =>
+        str(" (NoLoc) ")
+      case Location.LocData(file, line) =>
+        str(s" ($file:$line) ")
+    }
+
     def attrs_(attrs: Attrs): Unit =
       if (attrs == Attrs.None) {
         ()
@@ -447,8 +454,9 @@ object Show {
       }
 
     def defn_(defn: Defn): Unit = defn match {
-      case Defn.Var(attrs, name, ty, v) =>
+      case Defn.Var(attrs, name, ty, v, loc) =>
         attrs_(attrs)
+        loc_(loc)
         str("var ")
         global_(name)
         str(" : ")
@@ -457,8 +465,9 @@ object Show {
           str(" = ")
           val_(v)
         }
-      case Defn.Const(attrs, name, ty, v) =>
+      case Defn.Const(attrs, name, ty, v, loc) =>
         attrs_(attrs)
+        loc_(loc)
         str("const ")
         global_(name)
         str(" : ")
@@ -467,14 +476,16 @@ object Show {
           str(" = ")
           val_(v)
         }
-      case Defn.Declare(attrs, name, ty) =>
+      case Defn.Declare(attrs, name, ty, loc) =>
         attrs_(attrs)
+        loc_(loc)
         str("def ")
         global_(name)
         str(" : ")
         type_(ty)
-      case Defn.Define(attrs, name, ty, insts) =>
+      case Defn.Define(attrs, name, ty, insts, loc) =>
         attrs_(attrs)
+        loc_(loc)
         str("def ")
         global_(name)
         str(" : ")
@@ -492,33 +503,37 @@ object Show {
         }
         newline()
         str("}")
-      case Defn.Struct(attrs, name, tys) =>
+      case Defn.Struct(attrs, name, tys, loc) =>
         attrs_(attrs)
+        loc_(loc)
         str("struct ")
         global_(name)
         str(" {")
         rep(tys, sep = ", ")(type_)
         str("}")
-      case Defn.Trait(attrs, name, ifaces) =>
+      case Defn.Trait(attrs, name, ifaces, loc) =>
         attrs_(attrs)
+        loc_(loc)
         str("trait ")
         global_(name)
         if (ifaces.nonEmpty) {
           str(" : ")
           rep(ifaces, sep = ", ")(global_)
         }
-      case Defn.Class(attrs, name, parent, ifaces) =>
+      case Defn.Class(attrs, name, parent, ifaces, loc) =>
         val parents = parent ++: ifaces
         attrs_(attrs)
+        loc_(loc)
         str("class ")
         global_(name)
         if (parents.nonEmpty) {
           str(" : ")
           rep(parents, sep = ", ")(global_)
         }
-      case Defn.Module(attrs, name, parent, ifaces) =>
+      case Defn.Module(attrs, name, parent, ifaces, loc) =>
         val parents = parent ++: ifaces
         attrs_(attrs)
+        loc_(loc)
         str("module ")
         global_(name)
         if (parents.nonEmpty) {
@@ -526,6 +541,7 @@ object Show {
           rep(parents, sep = ", ")(global_)
         }
     }
+
 
     def type_(ty: Type): Unit = ty match {
       case Type.None   => str("none")

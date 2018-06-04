@@ -31,7 +31,8 @@ class HasTrait(implicit top: Top) extends Inject {
                          Seq(Val.Int(0), classid, traitid))),
         Inst.Let(result.name, Op.Load(Type.Bool, boolptr)),
         Inst.Ret(result)
-      )
+      ),
+      Location.NoLoc //todo location?
     )
   }
 
@@ -53,7 +54,8 @@ class HasTrait(implicit top: Top) extends Inject {
                          Seq(Val.Int(0), leftid, rightid))),
         Inst.Let(result.name, Op.Load(Type.Bool, boolptr)),
         Inst.Ret(result)
-      )
+      ),
+      Location.NoLoc //todo location?
     )
   }
 

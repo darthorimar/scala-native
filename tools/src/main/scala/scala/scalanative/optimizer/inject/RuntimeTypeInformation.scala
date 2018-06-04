@@ -14,7 +14,8 @@ class RuntimeTypeInformation(implicit top: Top) extends Inject {
       buf += Defn.Const(Attrs.None,
                         node.rtti.name,
                         node.rtti.struct,
-                        node.rtti.value)
+                        node.rtti.value,
+                        Location.NoLoc) //todo location?
     }
     top.classes.foreach(inject)
     top.traits.foreach(inject)

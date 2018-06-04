@@ -12,13 +12,15 @@ class ModuleArray(top: Top) extends Inject {
       Defn.Var(Attrs.None,
                ModuleArray.moduleArrayName,
                top.moduleArray.value.ty,
-               top.moduleArray.value)
+               top.moduleArray.value,
+               Location.NoLoc) //todo location?
 
     buf +=
       Defn.Var(Attrs.None,
                ModuleArray.moduleArraySizeName,
                Type.Int,
-               Val.Int(top.moduleArray.size))
+               Val.Int(top.moduleArray.size),
+               Location.NoLoc) //todo location?
   }
 }
 

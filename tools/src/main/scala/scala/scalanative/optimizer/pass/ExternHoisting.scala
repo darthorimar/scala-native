@@ -18,13 +18,13 @@ class ExternHoisting(implicit top: Top) extends Pass {
     val buf = scala.collection.mutable.UnrolledBuffer.empty[Defn]
 
     defns.foreach {
-      case defn @ Defn.Declare(attrs, name, _) if attrs.isExtern =>
+      case defn @ Defn.Declare(attrs, name, _, _) if attrs.isExtern =>
         buf += super.onDefn(defn.copy(name = stripName(name)))
-      case defn @ Defn.Define(attrs, name, _, _) if attrs.isExtern =>
+      case defn @ Defn.Define(attrs, name, _, _, _) if attrs.isExtern =>
         buf += super.onDefn(defn.copy(name = stripName(name)))
-      case defn @ Defn.Const(attrs, name, _, _) if attrs.isExtern =>
+      case defn @ Defn.Const(attrs, name, _, _, _) if attrs.isExtern =>
         buf += super.onDefn(defn.copy(name = stripName(name)))
-      case defn @ Defn.Var(attrs, name, _, _) if attrs.isExtern =>
+      case defn @ Defn.Var(attrs, name, _, _, _) if attrs.isExtern =>
         buf += super.onDefn(defn.copy(name = stripName(name)))
       case defn =>
         buf += super.onDefn(defn)

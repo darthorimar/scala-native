@@ -14,7 +14,8 @@ class ObjectArrayId(top: Top) extends Inject {
     buf += Defn.Var(Attrs.None,
                     ObjectArrayId.objectArrayIdName,
                     Type.Int,
-                    Val.Int(objectArray.id))
+                    Val.Int(objectArray.id),
+                    Location.NoLoc)//todo location?
   }
 }
 

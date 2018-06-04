@@ -32,7 +32,8 @@ object ReflectiveProxy {
         Seq(label),
         unboxInsts,
         Seq(method, call, box, retInst)
-      ).flatten
+      ).flatten,
+      Location.NoLoc //todo location?
     )
   }
 

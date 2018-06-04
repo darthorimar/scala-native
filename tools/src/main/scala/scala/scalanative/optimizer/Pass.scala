@@ -21,22 +21,22 @@ trait Pass extends AnyPass {
     assembly.map(onDefn)
 
   def onDefn(defn: Defn): Defn = defn match {
-    case defn @ Defn.Var(_, _, ty, value) =>
+    case defn @ Defn.Var(_, _, ty, value, _) =>
       defn.copy(ty = onType(ty), rhs = onVal(value))
-    case defn @ Defn.Const(_, _, ty, value) =>
+    case defn @ Defn.Const(_, _, ty, value, _) =>
       defn.copy(ty = onType(ty), rhs = onVal(value))
-    case defn @ Defn.Declare(_, _, ty) =>
+    case defn @ Defn.Declare(_, _, ty, _) =>
       defn.copy(ty = onType(ty))
-    case defn @ Defn.Define(_, _, ty, insts) =>
+    case defn @ Defn.Define(_, _, ty, insts, _) =>
       _fresh = Fresh(insts)
       defn.copy(ty = onType(ty), insts = onInsts(insts))
-    case defn @ Defn.Struct(_, _, tys) =>
+    case defn @ Defn.Struct(_, _, tys, _) =>
       defn.copy(tys = tys.map(onType))
-    case defn @ Defn.Trait(_, _, _) =>
+    case defn @ Defn.Trait(_, _, _, _) =>
       defn
-    case defn @ Defn.Class(_, _, _, _) =>
+    case defn @ Defn.Class(_, _, _, _, _) =>
       defn
-    case defn @ Defn.Module(_, _, _, _) =>
+    case defn @ Defn.Module(_, _, _, _, _) =>
       defn
   }
 

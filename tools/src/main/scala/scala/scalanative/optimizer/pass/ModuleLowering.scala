@@ -43,10 +43,10 @@ class ModuleLowering(implicit top: Top) extends Pass {
     val buf = mutable.UnrolledBuffer.empty[Defn]
 
     defns.foreach {
-      case Defn.Module(attrs, clsName @ ClassRef(cls), parent, ifaces) =>
+      case Defn.Module(attrs, clsName @ ClassRef(cls), parent, ifaces, loc) =>
         implicit val fresh = Fresh()
 
-        val clsDefn = Defn.Class(attrs, clsName, parent, ifaces)
+        val clsDefn = Defn.Class(attrs, clsName, parent, ifaces, loc)
         val clsTy   = Type.Class(clsName)
 
         val entry      = fresh()
@@ -89,7 +89,8 @@ class ModuleLowering(implicit top: Top) extends Pass {
             Inst.Let(Op.Store(clsTy, slot, alloc)),
             initCall,
             Inst.Ret(alloc)
-          )
+          ),
+          loc
         )
 
         buf += clsDefn
