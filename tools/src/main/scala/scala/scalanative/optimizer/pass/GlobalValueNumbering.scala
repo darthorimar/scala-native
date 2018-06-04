@@ -41,7 +41,7 @@ class GlobalValueNumbering extends Pass {
           case Val.Local(paramName, _) => (paramName == dominatingDef)
         }
         val foundInInsts = dominatingBlock.insts.exists {
-          case Inst.Let(name, _) => (name == dominatingDef)
+          case Inst.Let(name, _, _) => (name == dominatingDef)
           case _                 => false
         }
 
@@ -81,7 +81,8 @@ class GlobalValueNumbering extends Pass {
             val newInstOpt = redundantInstrs.headOption.map(
               redInst =>
                 Inst.Let(inst.name,
-                         Op.Copy(Val.Local(redInst.name, redInst.op.resty))))
+                         Op.Copy(Val.Local(redInst.name, redInst.op.resty)),
+                         inst.loc))
             newInstOpt.getOrElse(inst)
           } else {
             inst

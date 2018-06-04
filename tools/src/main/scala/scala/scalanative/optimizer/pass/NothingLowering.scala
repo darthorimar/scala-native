@@ -16,13 +16,13 @@ class NothingLowering extends Pass {
     val buf = new nir.Buffer
 
     insts.foreach {
-      case Inst.Throw(v, unwind) =>
-        buf += super.onInst(Inst.Let(Op.Call(throwSig, throw_, Seq(v), unwind)))
-        buf.unreachable
+      case Inst.Throw(v, unwind, loc) =>
+        buf += super.onInst(Inst.Let(Op.Call(throwSig, throw_, Seq(v), unwind), loc))
+        buf.unreachable(loc)
 
-      case inst @ Inst.Let(n, op) if op.resty == Type.Nothing =>
+      case inst @ Inst.Let(n, op, loc) if op.resty == Type.Nothing =>
         buf += super.onInst(inst)
-        buf.unreachable
+        buf.unreachable(loc)
 
       case inst =>
         buf += super.onInst(inst)

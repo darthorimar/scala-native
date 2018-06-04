@@ -35,24 +35,27 @@ class Main(entry: Global) extends Inject {
       MainName,
       MainSig,
       Seq(
-        Inst.Label(fresh(), Seq(argc, argv)),
-        Inst.Let(stackBottom.name, Op.Stackalloc(Type.Ptr, Val.Long(0))),
+        Inst.Label(fresh(), Seq(argc, argv), Location.NoLoc),
+        Inst.Let(stackBottom.name, Op.Stackalloc(Type.Ptr, Val.Long(0)), Location.NoLoc),
         Inst.Let(
           Op.Store(Type.Ptr,
                    Val.Global(stackBottomName, Type.Ptr),
-                   stackBottom)),
-        Inst.Let(Op.Call(InitSig, Init, Seq(), unwind)),
-        Inst.Let(rt.name, Op.Module(Rt.name, unwind)),
+                   stackBottom),
+                   Location.NoLoc),
+        Inst.Let(Op.Call(InitSig, Init, Seq(), unwind), Location.NoLoc),
+        Inst.Let(rt.name, Op.Module(Rt.name, unwind), Location.NoLoc),
         Inst.Let(arr.name,
-                 Op.Call(RtInitSig, RtInit, Seq(rt, argc, argv), unwind)),
-        Inst.Let(module.name, Op.Module(entry.top, unwind)),
-        Inst.Let(Op.Call(entryMainTy, entryMain, Seq(module, arr), unwind)),
-        Inst.Let(Op.Call(RtLoopSig, RtLoop, Seq(module), unwind)),
-        Inst.Ret(Val.Int(0)),
-        Inst.Label(unwind.name, Seq(exc)),
+                 Op.Call(RtInitSig, RtInit, Seq(rt, argc, argv), unwind),
+                 Location.NoLoc),
+        Inst.Let(module.name, Op.Module(entry.top, unwind), Location.NoLoc),
+        Inst.Let(Op.Call(entryMainTy, entryMain, Seq(module, arr), unwind), Location.NoLoc),
+        Inst.Let(Op.Call(RtLoopSig, RtLoop, Seq(module), unwind), Location.NoLoc),
+        Inst.Ret(Val.Int(0), Location.NoLoc),
+        Inst.Label(unwind.name, Seq(exc), Location.NoLoc),
         Inst.Let(
-          Op.Call(PrintStackTraceSig, PrintStackTrace, Seq(exc), Next.None)),
-        Inst.Ret(Val.Int(1))
+          Op.Call(PrintStackTraceSig, PrintStackTrace, Seq(exc), Next.None),
+          Location.NoLoc),
+        Inst.Ret(Val.Int(1), Location.NoLoc)
       ),
       Location.NoLoc //todo location?
     )

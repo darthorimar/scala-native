@@ -27,7 +27,7 @@ class CopyPropagation extends Pass {
     val copies = mutable.Map.empty[Local, Val]
 
     insts.foreach {
-      case Let(n, Op.Copy(v)) =>
+      case Let(n, Op.Copy(v), _) =>
         copies(n) = v
       case inst =>
         ()
@@ -40,7 +40,7 @@ class CopyPropagation extends Pass {
     val buf = new Buffer
     locals = collect(insts)
     insts.foreach {
-      case Let(_, _: Op.Copy) =>
+      case Let(_, _: Op.Copy, _) =>
         ()
       case inst =>
         buf += super.onInst(inst)

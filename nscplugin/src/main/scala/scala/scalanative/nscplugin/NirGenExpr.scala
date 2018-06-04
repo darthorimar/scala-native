@@ -3,10 +3,11 @@ package nscplugin
 
 import scala.collection.mutable
 import scala.reflect.internal.Flags._
-import scalanative.nir._
-import scalanative.util.unsupported
-import scalanative.util.ScopedVar.scoped
-import scalanative.nscplugin.NirPrimitives._
+import scala.scalanative.nir._
+import scala.scalanative.util.unsupported
+import scala.scalanative.util.ScopedVar.scoped
+import scala.scalanative.nscplugin.NirPrimitives._
+
 
 trait NirGenExpr { self: NirGenPhase =>
   import global._
@@ -26,12 +27,12 @@ trait NirGenExpr { self: NirGenPhase =>
       inst match {
         case inst: nir.Inst.Label =>
           if (labeled) {
-            unreachable
+            unreachable(inst.loc)
           }
           labeled = true
         case _ =>
           if (!labeled) {
-            label(fresh())
+            label(fresh(), inst.loc)
           }
           labeled = !inst.isInstanceOf[nir.Inst.Cf]
       }
@@ -48,6 +49,10 @@ trait NirGenExpr { self: NirGenPhase =>
   }
 
   class ExprBuffer(implicit fresh: Fresh) extends FixupBuffer { buf =>
+
+    def getLoc(tree: Tree) =
+      Location.LocData(tree.pos.source.file.file.toPath, tree.pos.line)
+
     def genExpr(tree: Tree): Val = tree match {
       case EmptyTree =>
         Val.Unit
@@ -125,7 +130,7 @@ trait NirGenExpr { self: NirGenPhase =>
 
     def genLabelDef(label: LabelDef): Val = {
       assert(label.params.length == 0)
-      buf.jump(Next(curMethodEnv.enterLabel(label)))
+      buf.jump(Next(curMethodEnv.enterLabel(label)), getLoc(label))
       genLabel(label)
     }
 
@@ -137,7 +142,7 @@ trait NirGenExpr { self: NirGenPhase =>
         local
       }
 
-      buf.label(local, params)
+      buf.label(local, params, getLoc(label))
       genExpr(label.rhs)
     }
 
@@ -151,7 +156,7 @@ trait NirGenExpr { self: NirGenPhase =>
           local
       }
 
-      buf.label(local, params)
+      buf.label(local, params, getLoc(label))
       if (isStatic) {
         genExpr(label.rhs)
       } else {
@@ -170,7 +175,7 @@ trait NirGenExpr { self: NirGenPhase =>
       } else {
         val ty    = genType(vd.symbol.tpe, box = false)
         val alloc = curMethodEnv.resolve(vd.symbol)
-        buf.store(ty, alloc, rhs)
+        buf.store(ty, alloc, rhs, getLoc(vd))
       }
     }
 
@@ -185,18 +190,18 @@ trait NirGenExpr { self: NirGenPhase =>
       val mergev               = Val.Local(fresh(), retty)
 
       val cond = genExpr(condp)
-      buf.branch(cond, Next(thenn), Next(elsen))
+      buf.branch(cond, Next(thenn), Next(elsen), getLoc(condp))
       locally {
-        buf.label(thenn)
+        buf.label(thenn, getLoc(thenp))
         val thenv = genExpr(thenp)
-        buf.jump(mergen, Seq(thenv))
+        buf.jump(mergen, Seq(thenv), getLoc(thenp))
       }
       locally {
-        buf.label(elsen)
+        buf.label(elsen, getLoc(elsep))
         val elsev = genExpr(elsep)
         buf.jump(mergen, Seq(elsev))
       }
-      buf.label(mergen, Seq(mergev))
+      buf.label(mergen, Seq(mergev), getLoc(elsep))
       mergev
     }
 
@@ -236,17 +241,17 @@ trait NirGenExpr { self: NirGenPhase =>
 
       // Generate code for the switch and its cases.
       val scrut = genExpr(scrutp)
-      buf.switch(scrut, defaultnext, casenexts)
-      buf.label(defaultnext.name)
+      buf.switch(scrut, defaultnext, casenexts, getLoc(defaultp))
+      buf.label(defaultnext.name, getLoc(defaultp))
       val defaultres = genExpr(defaultp)
-      buf.jump(merge, Seq(defaultres))
+      buf.jump(merge, Seq(defaultres), getLoc(defaultp))
       caseps.foreach {
         case (n, _, expr) =>
-          buf.label(n)
+          buf.label(n, getLoc(expr))
           val caseres = genExpr(expr)
-          buf.jump(merge, Seq(caseres))
+          buf.jump(merge, Seq(caseres), getLoc(expr))
       }
-      buf.label(merge, Seq(mergev))
+      buf.label(merge, Seq(mergev), Location.NoLoc)//todo: location?
       mergev
     }
 
@@ -256,7 +261,7 @@ trait NirGenExpr { self: NirGenPhase =>
 
       // Enter symbols for all labels and jump to the first one.
       lds.foreach(curMethodEnv.enterLabel)
-      buf.jump(Next(curMethodEnv.resolveLabel(lds.head)))
+      buf.jump(Next(curMethodEnv.resolveLabel(lds.head)), getLoc(lds.head))
 
       // Generate code for all labels and return value of the last one.
       lds.map(genLabel(_)).last
@@ -286,15 +291,15 @@ trait NirGenExpr { self: NirGenPhase =>
       val nested = new ExprBuffer
       locally {
         scoped(curUnwind := Next.Unwind(unwind)) {
-          nested.label(normaln)
+          nested.label(normaln, Location.NoLoc)
           val res = nested.genExpr(expr)
-          nested.jump(mergen, Seq(res))
+          nested.jump(mergen, Seq(res), Location.NoLoc)
         }
       }
       locally {
-        nested.label(unwind, Seq(excv))
+        nested.label(unwind, Seq(excv), Location.NoLoc)
         val res = nested.genTryCatch(retty, excv, mergen, catches)
-        nested.jump(mergen, Seq(res))
+        nested.jump(mergen, Seq(res), Location.NoLoc)
       }
 
       // Append finally to the try/catch instructions and merge them back.
@@ -306,9 +311,9 @@ trait NirGenExpr { self: NirGenPhase =>
         }
 
       // Append try/catch instructions to the outher instruction buffer.
-      buf.jump(Next(normaln))
+      buf.jump(Next(normaln), Location.NoLoc)
       buf ++= insts
-      buf.label(mergen, Seq(mergev))
+      buf.label(mergen, Seq(mergev), Location.NoLoc)
       mergev
     }
 
@@ -328,7 +333,7 @@ trait NirGenExpr { self: NirGenPhase =>
           }
           val f = { () =>
             symopt.foreach { sym =>
-              val cast = buf.as(excty, exc)
+              val cast = buf.as(excty, exc, Location.NoLoc)
               curMethodEnv.enter(sym, cast)
             }
             val res = genExpr(body)
@@ -357,16 +362,16 @@ trait NirGenExpr { self: NirGenPhase =>
     def genTryFinally(finallyp: Tree, insts: Seq[nir.Inst]): Seq[Inst] = {
       val labels =
         insts.collect {
-          case Inst.Label(n, _) => n
+          case Inst.Label(n, _, _) => n
         }.toSet
       def internal(cf: Inst.Cf) = cf match {
-        case inst @ Inst.Jump(n) =>
+        case inst @ Inst.Jump(n, _) =>
           labels.contains(n.name)
-        case inst @ Inst.If(_, n1, n2) =>
+        case inst @ Inst.If(_, n1, n2, _) =>
           labels.contains(n1.name) && labels.contains(n2.name)
-        case inst @ Inst.Switch(_, n, ns) =>
+        case inst @ Inst.Switch(_, n, ns, _) =>
           labels.contains(n.name) && ns.forall(n => labels.contains(n.name))
-        case inst @ Inst.Throw(_, n) =>
+        case inst @ Inst.Throw(_, n, _) =>
           (n ne Next.None) && labels.contains(n.name)
         case _ =>
           false
@@ -386,7 +391,7 @@ trait NirGenExpr { self: NirGenPhase =>
           val res = finalies.genExpr(finallyp)
           finalies += cf
           // The original jump outside goes through finally block first.
-          Inst.Jump(Next(finallyn))
+          Inst.Jump(Next(finallyn), cf.loc)
         case inst =>
           inst
       }
@@ -699,7 +704,7 @@ trait NirGenExpr { self: NirGenPhase =>
     def genApplyUnbox(st: SimpleType, argp: Tree): Val = {
       val value = genExpr(argp)
       value.ty match {
-        case _: scalanative.nir.Type.I | _: scalanative.nir.Type.F =>
+        case _: scala.scalanative.nir.Type.I | _: scala.scalanative.nir.Type.F =>
           // No need for unboxing, fixing some slack generated by the general
           // purpose Scala compiler.
           value
@@ -992,7 +997,7 @@ trait NirGenExpr { self: NirGenPhase =>
                                     Seq(rightp))
           buf.jump(mergen, Seq(elsev))
         }
-        buf.label(mergen, Seq(mergev))
+        buf.label(mergen, Seq(mergev), Location.NoLoc)
         if (negated) negateBool(mergev) else mergev
       }
     }

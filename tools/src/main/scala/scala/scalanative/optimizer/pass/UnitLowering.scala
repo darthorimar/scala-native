@@ -28,12 +28,12 @@ class UnitLowering extends Pass {
     import buf._
 
     insts.foreach {
-      case inst @ Inst.Let(n, op) if op.resty == Type.Unit =>
-        let(super.onOp(op))
-        let(n, Op.Copy(unit))
+      case inst @ Inst.Let(n, op, loc) if op.resty == Type.Unit =>
+        let(super.onOp(op), loc)
+        let(n, Op.Copy(unit), loc)
 
-      case Inst.Ret(_) if defnRetty == Type.Unit =>
-        ret(Val.None)
+      case Inst.Ret(_, loc) if defnRetty == Type.Unit =>
+        ret(Val.None, loc)
 
       case inst =>
         buf += super.onInst(inst)

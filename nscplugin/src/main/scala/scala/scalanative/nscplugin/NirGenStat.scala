@@ -357,7 +357,7 @@ trait NirGenStat { self: NirGenPhase =>
 
       def genPrelude(): Unit = {
         val vars = curMethodInfo.mutableVars.toSeq
-        buf.label(fresh(), params)
+        buf.label(fresh(), params, Location.NoLoc)
         vars.foreach { sym =>
           val ty    = genType(sym.info, box = false)
           val alloc = buf.stackalloc(ty, Val.None)

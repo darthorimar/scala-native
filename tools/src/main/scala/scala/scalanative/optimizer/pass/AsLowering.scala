@@ -9,9 +9,9 @@ import nir._, Inst.Let
 class AsLowering extends Pass {
 
   override def onInst(inst: Inst) = inst match {
-    case Let(n, Op.As(_: Type.RefKind, Of(v, _: Type.RefKind))) =>
-      Let(n, Op.Copy(v))
-    case inst @ Let(n, Op.As(to, Of(v, from))) =>
+    case Let(n, Op.As(_: Type.RefKind, Of(v, _: Type.RefKind)), loc) =>
+      Let(n, Op.Copy(v), loc)
+    case inst @ Let(n, Op.As(to, Of(v, from)), _) =>
       util.unsupported(s"can't cast from $from to $to")
     case _ =>
       inst

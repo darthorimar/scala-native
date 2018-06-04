@@ -46,26 +46,26 @@ trait Pass extends AnyPass {
   def onInst(inst: Inst): Inst = inst match {
     case Inst.None =>
       inst
-    case Inst.Label(n, params) =>
+    case Inst.Label(n, params, loc) =>
       val newparams = params.map { param =>
         Val.Local(param.name, onType(param.ty))
       }
-      Inst.Label(n, newparams)
-    case Inst.Let(n, op) =>
-      Inst.Let(n, onOp(op))
+      Inst.Label(n, newparams, loc)
+    case Inst.Let(n, op, loc) =>
+      Inst.Let(n, onOp(op), loc)
 
-    case Inst.Unreachable =>
-      Inst.Unreachable
-    case Inst.Ret(v) =>
-      Inst.Ret(onVal(v))
-    case Inst.Jump(next) =>
-      Inst.Jump(onNext(next))
-    case Inst.If(v, thenp, elsep) =>
-      Inst.If(onVal(v), onNext(thenp), onNext(elsep))
-    case Inst.Switch(v, default, cases) =>
-      Inst.Switch(onVal(v), onNext(default), cases.map(onNext))
-    case Inst.Throw(v, unwind) =>
-      Inst.Throw(onVal(v), onNext(unwind))
+    case Inst.Unreachable(loc) =>
+      Inst.Unreachable(loc)
+    case Inst.Ret(v, loc) =>
+      Inst.Ret(onVal(v), loc)
+    case Inst.Jump(next, loc) =>
+      Inst.Jump(onNext(next), loc)
+    case Inst.If(v, thenp, elsep, loc) =>
+      Inst.If(onVal(v), onNext(thenp), onNext(elsep), loc)
+    case Inst.Switch(v, default, cases, loc) =>
+      Inst.Switch(onVal(v), onNext(default), cases.map(onNext), loc)
+    case Inst.Throw(v, unwind, loc) =>
+      Inst.Throw(onVal(v), onNext(unwind), loc)
   }
 
   def onOp(op: Op): Op = op match {

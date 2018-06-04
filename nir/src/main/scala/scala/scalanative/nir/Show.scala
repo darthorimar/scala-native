@@ -117,7 +117,7 @@ object Show {
     def inst_(inst: Inst): Unit = inst match {
       case Inst.None =>
         str("none")
-      case Inst.Label(name, params) =>
+      case Inst.Label(name, params, loc) =>
         local_(name)
         if (params.isEmpty) {
           ()
@@ -132,28 +132,35 @@ object Show {
           str(")")
         }
         str(":")
-      case Inst.Let(name, op) =>
+      case Inst.Let(name, op, loc) =>
+        loc_(loc)
         local_(name)
         str(" = ")
         op_(op)
-      case Inst.Unreachable =>
+      case Inst.Unreachable(loc) =>
+        loc_(loc)
         str("unreachable")
-      case Inst.Ret(Val.None) =>
+      case Inst.Ret(Val.None, loc) =>
+        loc_(loc)
         str("ret")
-      case Inst.Ret(value) =>
+      case Inst.Ret(value, loc) =>
+        loc_(loc)
         str("ret ")
         val_(value)
-      case Inst.Jump(next) =>
+      case Inst.Jump(next, loc) =>
+        loc_(loc)
         str("jump ")
         next_(next)
-      case Inst.If(cond, thenp, elsep) =>
+      case Inst.If(cond, thenp, elsep, loc) =>
+        loc_(loc)
         str("if ")
         val_(cond)
         str(" then ")
         next_(thenp)
         str(" else ")
         next_(elsep)
-      case Inst.Switch(scrut, default, cases) =>
+      case Inst.Switch(scrut, default, cases, loc) =>
+        loc_(loc)
         str("switch ")
         val_(scrut)
         str(" {")
@@ -168,7 +175,8 @@ object Show {
         unindent()
         newline()
         str("}")
-      case Inst.Throw(v, unwind) =>
+      case Inst.Throw(v, unwind, loc) =>
+        loc_(loc)
         str("throw ")
         val_(v)
         if (unwind ne Next.None) {

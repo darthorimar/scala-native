@@ -10,7 +10,7 @@ import build.Config
 class BoxingLowering extends Pass {
 
   override def onInst(inst: Inst): Inst = inst match {
-    case Inst.Let(name, box @ Op.Box(ty, from)) =>
+    case Inst.Let(name, box @ Op.Box(ty, from), loc) =>
       val (module, id) = BoxingLowering.BoxTo(ty)
 
       val boxTy =
@@ -23,9 +23,10 @@ class BoxingLowering extends Pass {
                          Val.Undef(Type.Module(module)),
                          from
                        ),
-                       Next.None))
+                       Next.None),
+               loc)
 
-    case Inst.Let(name, unbox @ Op.Unbox(ty, from)) =>
+    case Inst.Let(name, unbox @ Op.Unbox(ty, from), loc) =>
       val (module, id) = BoxingLowering.UnboxTo(ty)
 
       val unboxTy =
@@ -38,7 +39,8 @@ class BoxingLowering extends Pass {
                          Val.Undef(Type.Module(module)),
                          from
                        ),
-                       Next.None))
+                       Next.None),
+               loc)
 
     case inst =>
       inst

@@ -241,7 +241,7 @@ object CodeGen {
         rep(argtys, sep = ", ")(genType)
       } else {
         insts.head match {
-          case Inst.Label(_, params) =>
+          case Inst.Label(_, params, loc) =>
             rep(params, sep = ", ")(genVal)
         }
       }
@@ -535,25 +535,25 @@ object CodeGen {
       case inst: Inst.Let =>
         genLet(inst)
 
-      case Inst.Unreachable =>
+      case Inst.Unreachable(_) =>
         newline()
         str("unreachable")
 
-      case Inst.Ret(Val.None) =>
+      case Inst.Ret(Val.None, loc) =>
         newline()
         str("ret void")
 
-      case Inst.Ret(value) =>
+      case Inst.Ret(value, loc) =>
         newline()
         str("ret ")
         genVal(value)
 
-      case Inst.Jump(next) =>
+      case Inst.Jump(next, loc) =>
         newline()
         str("br ")
         genNext(next)
 
-      case Inst.If(cond, thenp, elsep) =>
+      case Inst.If(cond, thenp, elsep, loc) =>
         newline()
         str("br ")
         genVal(cond)
@@ -562,7 +562,7 @@ object CodeGen {
         str(", ")
         genNext(elsep)
 
-      case Inst.Switch(scrut, default, cases) =>
+      case Inst.Switch(scrut, default, cases, loc) =>
         newline()
         str("switch ")
         genVal(scrut)

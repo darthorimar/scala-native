@@ -14,28 +14,28 @@ class IsLowering(implicit top: Top) extends Pass {
     import buf._
 
     insts.foreach {
-      case Let(n, Op.Is(_, Val.Null | Val.Zero(_))) =>
-        let(n, Op.Copy(Val.False))
+      case Let(n, Op.Is(_, Val.Null | Val.Zero(_)), loc) =>
+        let(n, Op.Copy(Val.False), loc)
 
-      case Let(n, Op.Is(ty, obj)) =>
+      case Let(n, Op.Is(ty, obj), loc) =>
         val result = Val.Local(fresh(), Type.Bool)
 
         val thenL, elseL, contL = fresh()
 
         // check if obj is null
-        val isnull = let(Op.Comp(Comp.Ieq, Type.Ptr, obj, Val.Null))
-        branch(isnull, Next(thenL), Next(elseL))
+        val isnull = let(Op.Comp(Comp.Ieq, Type.Ptr, obj, Val.Null), loc)
+        branch(isnull, Next(thenL), Next(elseL), loc)
         // in case it's null, result is always false
-        label(thenL)
-        val res1 = let(Op.Copy(Val.False))
-        jump(contL, Seq(res1))
+        label(thenL, loc)
+        val res1 = let(Op.Copy(Val.False), loc)
+        jump(contL, Seq(res1), loc)
         // otherwise, do an actual instance check
-        label(elseL)
+        label(elseL, loc)
         val res2 = genIs(buf, ty, obj)
-        jump(contL, Seq(res2))
+        jump(contL, Seq(res2), loc)
         // merge the result of two branches
-        label(contL, Seq(result))
-        let(n, Op.Copy(result))
+        label(contL, Seq(result), loc)
+        let(n, Op.Copy(result), loc)
 
       case inst =>
         buf += inst
@@ -49,26 +49,30 @@ class IsLowering(implicit top: Top) extends Pass {
 
     ty match {
       case ClassRef(cls) if cls.range.length == 1 =>
-        val typeptr = let(Op.Load(Type.Ptr, obj))
-        let(Op.Comp(Comp.Ieq, Type.Ptr, typeptr, cls.rtti.const))
+        val loc = Location.NoLoc //todo: location?
+        val typeptr = let(Op.Load(Type.Ptr, obj), loc)
+        let(Op.Comp(Comp.Ieq, Type.Ptr, typeptr, cls.rtti.const), loc)
 
       case ClassRef(cls) =>
-        val typeptr = let(Op.Load(Type.Ptr, obj))
-        val idptr   = let(Op.Elem(Rt.Type, typeptr, Seq(Val.Int(0), Val.Int(0))))
-        val id      = let(Op.Load(Type.Int, idptr))
-        val ge      = let(Op.Comp(Comp.Sle, Type.Int, Val.Int(cls.range.start), id))
-        val le      = let(Op.Comp(Comp.Sle, Type.Int, id, Val.Int(cls.range.end)))
-        let(Op.Bin(Bin.And, Type.Bool, ge, le))
+        val loc = Location.NoLoc //todo: location?
+        val typeptr = let(Op.Load(Type.Ptr, obj), loc)
+        val idptr   = let(Op.Elem(Rt.Type, typeptr, Seq(Val.Int(0), Val.Int(0))), loc)
+        val id      = let(Op.Load(Type.Int, idptr), loc)
+        val ge      = let(Op.Comp(Comp.Sle, Type.Int, Val.Int(cls.range.start), id), loc)
+        val le      = let(Op.Comp(Comp.Sle, Type.Int, id, Val.Int(cls.range.end)), loc)
+        let(Op.Bin(Bin.And, Type.Bool, ge, le), loc)
 
       case TraitRef(trt) =>
-        val typeptr = let(Op.Load(Type.Ptr, obj))
-        val idptr   = let(Op.Elem(Rt.Type, typeptr, Seq(Val.Int(0), Val.Int(0))))
-        val id      = let(Op.Load(Type.Int, idptr))
+        val loc = Location.NoLoc //todo: location?
+        val typeptr = let(Op.Load(Type.Ptr, obj), loc)
+        val idptr   = let(Op.Elem(Rt.Type, typeptr, Seq(Val.Int(0), Val.Int(0))), loc)
+        val id      = let(Op.Load(Type.Int, idptr), loc)
         val boolptr = let(
           Op.Elem(top.tables.classHasTraitTy,
                   top.tables.classHasTraitVal,
-                  Seq(Val.Int(0), id, Val.Int(trt.id))))
-        let(Op.Load(Type.Bool, boolptr))
+                  Seq(Val.Int(0), id, Val.Int(trt.id))),
+                  loc)
+        let(Op.Load(Type.Bool, boolptr), loc)
 
       case _ =>
         util.unsupported(s"is[$ty] $obj")

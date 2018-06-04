@@ -24,24 +24,25 @@ class SRemOverflow(implicit top: Top) extends Pass {
 
     insts.foreach {
       case Inst.Let(name,
-                    sremBin @ Op.Bin(Bin.Srem, intType: Type.I, _, divisor))
+                    sremBin @ Op.Bin(Bin.Srem, intType: Type.I, _, divisor),
+                    loc)
           if intType.width == 32 || intType.width == 64 =>
         val safeDivisor         = Val.Local(fresh(), intType)
         val thenL, elseL, contL = fresh()
 
         val isPossibleOverflow =
-          let(Op.Comp(Comp.Ieq, intType, divisor, Val.Int(-1)))
-        branch(isPossibleOverflow, Next(thenL), Next(elseL))
+          let(Op.Comp(Comp.Ieq, intType, divisor, Val.Int(-1)), loc)
+        branch(isPossibleOverflow, Next(thenL), Next(elseL), loc)
 
-        label(thenL)
-        jump(contL, Seq(Val.Int(1)))
+        label(thenL, loc)
+        jump(contL, Seq(Val.Int(1)), loc)
 
-        label(elseL)
-        jump(contL, Seq(divisor))
+        label(elseL, loc)
+        jump(contL, Seq(divisor), loc)
 
-        label(contL, Seq(safeDivisor))
+        label(contL, Seq(safeDivisor), loc)
 
-        let(name, sremBin.copy(r = safeDivisor))
+        let(name, sremBin.copy(r = safeDivisor), loc)
 
       case other => buf += other
     }

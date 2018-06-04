@@ -9,13 +9,13 @@ import nir._, Inst.Let
 class Canonicalization extends Pass {
 
   override def onInst(inst: Inst): Inst = inst match {
-    case Let(n, Op.Bin(bin, ty, lhs, rhs))
+    case Let(n, Op.Bin(bin, ty, lhs, rhs), loc)
         if (commutativeBin(bin) && scalarValue(lhs)) =>
-      Let(n, Op.Bin(bin, ty, rhs, lhs))
+      Let(n, Op.Bin(bin, ty, rhs, lhs), loc)
 
-    case Let(n, Op.Comp(comp, ty, lhs, rhs))
+    case Let(n, Op.Comp(comp, ty, lhs, rhs), loc)
         if (commutativeComp(comp) && scalarValue(lhs)) =>
-      Let(n, Op.Comp(comp, ty, rhs, lhs))
+      Let(n, Op.Comp(comp, ty, rhs, lhs), loc)
 
     case _ =>
       inst

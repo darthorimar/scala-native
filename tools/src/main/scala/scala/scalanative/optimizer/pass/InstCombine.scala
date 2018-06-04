@@ -32,7 +32,7 @@ class InstCombine extends Pass {
       b.insts.foreach { inst =>
         val simplifiedSeq = simplify(inst, resolver)
         simplifiedSeq.foreach {
-          case Let(n, op) => defop += (n -> op)
+          case Let(n, op, loc) => defop += (n -> op)
           case _          =>
         }
         buf ++= simplifiedSeq
@@ -45,83 +45,83 @@ class InstCombine extends Pass {
   private def simplify(inst: Inst, defop: DefOp): Seq[Inst] = {
     val singleSimp = inst match {
 
-      case Let(z, Op.Bin(Iadd, ty, y, IVal(a))) =>
+      case Let(z, Op.Bin(Iadd, ty, y, IVal(a)), loc) =>
         defop(y) match {
           // (x + b) + a = x + (a + b)
           case Some(Op.Bin(Iadd, _, x, IVal(b))) =>
-            Let(z, Op.Bin(Iadd, ty, x, IVal(a + b, ty)))
+            Let(z, Op.Bin(Iadd, ty, x, IVal(a + b, ty)), loc)
 
           // (x - b) + a = x + (a - b)
           case Some(Op.Bin(Isub, _, x, IVal(b))) =>
-            Let(z, Op.Bin(Iadd, ty, x, IVal(a - b, ty)))
+            Let(z, Op.Bin(Iadd, ty, x, IVal(a - b, ty)), loc)
 
           case _ => inst
         }
 
-      case Let(z, Op.Bin(Isub, ty, y, IVal(a))) =>
+      case Let(z, Op.Bin(Isub, ty, y, IVal(a)), loc) =>
         defop(y) match {
           // (x - b) - a = x - (a + b)
           case Some(Op.Bin(Isub, _, x, IVal(b))) =>
-            Let(z, Op.Bin(Isub, ty, x, IVal(a + b, ty)))
+            Let(z, Op.Bin(Isub, ty, x, IVal(a + b, ty)), loc)
 
           // (x + b) - a = x - (a - b)
           case Some(Op.Bin(Iadd, _, x, IVal(b))) =>
-            Let(z, Op.Bin(Isub, ty, x, IVal(a - b, ty)))
+            Let(z, Op.Bin(Isub, ty, x, IVal(a - b, ty)), loc)
 
           case _ => inst
         }
 
-      case Let(z, Op.Bin(Imul, ty, y, IVal(a))) =>
+      case Let(z, Op.Bin(Imul, ty, y, IVal(a)), loc) =>
         defop(y) match {
           // (x * b) * a = x * (a * b)
           case Some(Op.Bin(Imul, _, x, IVal(b))) =>
-            Let(z, Op.Bin(Imul, ty, x, IVal(a * b, ty)))
+            Let(z, Op.Bin(Imul, ty, x, IVal(a * b, ty)), loc)
 
           // (x << b) * a = x * (a * 2^b)
           case Some(Op.Bin(Shl, _, x, IVal(b))) =>
-            Let(z, Op.Bin(Imul, ty, x, IVal(a * math.pow(2, b).toLong, ty)))
+            Let(z, Op.Bin(Imul, ty, x, IVal(a * math.pow(2, b).toLong, ty)), loc)
 
           case _ => inst
         }
 
-      case Let(n, Op.Comp(Ieq, tyIeq, compared, IVal(0))) =>
+      case Let(n, Op.Comp(Ieq, tyIeq, compared, IVal(0)), loc) =>
         defop(compared) match {
           // ((x xor y) == 0) = (x == y)
           case Some(Op.Bin(Xor, tyXor, x, y)) if (tyIeq == tyXor) =>
-            Let(n, Op.Comp(Ieq, tyIeq, x, y))
+            Let(n, Op.Comp(Ieq, tyIeq, x, y), loc)
 
           case _ => inst
         }
 
-      case Let(n, Op.Comp(Ine, tyIne, compared, IVal(0))) =>
+      case Let(n, Op.Comp(Ine, tyIne, compared, IVal(0)), loc) =>
         defop(compared) match {
           // ((x xor y) != 0) = (x != y)
           case Some(Op.Bin(Xor, tyXor, x, y)) if (tyIne == tyXor) =>
-            Let(n, Op.Comp(Ine, tyIne, x, y))
+            Let(n, Op.Comp(Ine, tyIne, x, y), loc)
 
           case _ => inst
         }
 
-      case Let(n, Op.Select(cond, thenv, elsev)) =>
+      case Let(n, Op.Select(cond, thenv, elsev), loc) =>
         defop(cond) match {
           // select (c xor true) then a else b  =  select c then b else a
           case Some(Op.Bin(Xor, _, negCond, Val.True)) =>
-            Let(n, Op.Select(negCond, elsev, thenv))
+            Let(n, Op.Select(negCond, elsev, thenv), loc)
 
           case _ => inst
         }
 
-      case If(cond, thenp, elsep) =>
+      case If(cond, thenp, elsep, loc) =>
         defop(cond) match {
           // if (c xor true) then a else b  =  if c then b else a
           case Some(Op.Bin(Xor, _, negCond, Val.True)) =>
-            If(negCond, elsep, thenp)
+            If(negCond, elsep, thenp, loc)
 
           case _ => inst
         }
 
-      case Let(n, op @ Op.Bin(_, _, lhs, rhs)) =>
-        Let(n, simplifyBin(defop(lhs), defop(rhs), op))
+      case Let(n, op @ Op.Bin(_, _, lhs, rhs), loc) =>
+        Let(n, simplifyBin(defop(lhs), defop(rhs), op), loc)
 
       // Nothing
       case _ => inst
@@ -191,132 +191,147 @@ class InstCombine extends Pass {
                Op.Bin(Iadd,
                       ty,
                       defop(Op.Bin(Imul, _, x, z)),
-                      defop(Op.Bin(Imul, _, y, d)))) if (z == d) =>
+                      defop(Op.Bin(Imul, _, y, d))),
+               loc) if (z == d) =>
         val tmp = fresh()
-        Seq(Let(tmp, Op.Bin(Iadd, ty, x, y)),
-            Let(n, Op.Bin(Imul, ty, Val.Local(tmp, ty), z)))
+        Seq(Let(tmp, Op.Bin(Iadd, ty, x, y), loc),
+            Let(n, Op.Bin(Imul, ty, Val.Local(tmp, ty), z), loc))
 
       // unbox (box x) = x
-      case Let(n, Op.Unbox(_, defop(Op.Box(_, x)))) =>
-        Seq(Let(n, Op.Copy(x)))
+      case Let(n, Op.Unbox(_, defop(Op.Box(_, x))), loc) =>
+        Seq(Let(n, Op.Copy(x), loc))
 
       // (x or a) or b = x or (a or b)
-      case Let(n, Op.Bin(Or, ty, defop(Op.Bin(Or, _, x, IVal(a))), IVal(b))) =>
-        Seq(Let(n, Op.Bin(Or, ty, x, IVal(a | b, ty))))
+      case Let(n, Op.Bin(Or, ty, defop(Op.Bin(Or, _, x, IVal(a))), IVal(b)), loc) =>
+        Seq(Let(n, Op.Bin(Or, ty, x, IVal(a | b, ty)), loc))
 
       // (x and a) and b = x and (a and b)
       case Let(n,
-               Op.Bin(And, ty, defop(Op.Bin(And, _, x, IVal(a))), IVal(b))) =>
-        Seq(Let(n, Op.Bin(And, ty, x, IVal(a & b, ty))))
+               Op.Bin(And, ty, defop(Op.Bin(And, _, x, IVal(a))), IVal(b)),
+               loc) =>
+        Seq(Let(n, Op.Bin(And, ty, x, IVal(a & b, ty)), loc))
 
       // (x xor a) xor b = x xor (a xor b)
       case Let(n,
-               Op.Bin(Xor, ty, defop(Op.Bin(Xor, _, x, IVal(a))), IVal(b))) =>
-        Seq(Let(n, Op.Bin(Xor, ty, x, IVal(a ^ b, ty))))
+               Op.Bin(Xor, ty, defop(Op.Bin(Xor, _, x, IVal(a))), IVal(b)),
+               loc) =>
+        Seq(Let(n, Op.Bin(Xor, ty, x, IVal(a ^ b, ty)), loc))
 
       // (x << a) << b = x << (a + b)  [i32]
       case Let(n,
                Op.Bin(Shl,
                       Type.Int,
                       defop(Op.Bin(Shl, Type.Int, x, Val.Int(a))),
-                      Val.Int(b))) =>
+                      Val.Int(b)),
+                loc) =>
         val totShift = (a & 31) + (b & 31)
         if (totShift >= 32)
-          Seq(Let(n, Op.Copy(Val.Int(0))))
+          Seq(Let(n, Op.Copy(Val.Int(0)), loc))
         else
-          Seq(Let(n, Op.Bin(Shl, Type.Int, x, Val.Int(totShift))))
+          Seq(Let(n, Op.Bin(Shl, Type.Int, x, Val.Int(totShift)), loc))
 
       // (x << a) << b = x << (a + b)  [i64]
       case Let(n,
                Op.Bin(Shl,
                       Type.Long,
                       defop(Op.Bin(Shl, Type.Long, x, Val.Long(a))),
-                      Val.Long(b))) =>
+                      Val.Long(b)),
+               loc) =>
         val totShift = (a & 63) + (b & 63)
         if (totShift >= 64)
-          Seq(Let(n, Op.Copy(Val.Long(0))))
+          Seq(Let(n, Op.Copy(Val.Long(0)), loc))
         else
-          Seq(Let(n, Op.Bin(Shl, Type.Long, x, Val.Long(totShift))))
+          Seq(Let(n, Op.Bin(Shl, Type.Long, x, Val.Long(totShift)), loc))
 
       // (x >>> a) >>> b = x >>> (a + b)  [i32]
       case Let(n,
                Op.Bin(Lshr,
                       Type.Int,
                       defop(Op.Bin(Lshr, Type.Int, x, Val.Int(a))),
-                      Val.Int(b))) =>
+                      Val.Int(b)),
+                 loc) =>
         val totShift = (a & 31) + (b & 31)
         if (totShift >= 32)
-          Seq(Let(n, Op.Copy(Val.Int(0))))
+          Seq(Let(n, Op.Copy(Val.Int(0)), loc))
         else
-          Seq(Let(n, Op.Bin(Lshr, Type.Int, x, Val.Int(totShift))))
+          Seq(Let(n, Op.Bin(Lshr, Type.Int, x, Val.Int(totShift)), loc))
 
       // (x >>> a) >>> b = x >>> (a + b)  [i64]
       case Let(n,
                Op.Bin(Lshr,
                       Type.Long,
                       defop(Op.Bin(Lshr, Type.Long, x, Val.Long(a))),
-                      Val.Long(b))) =>
+                      Val.Long(b)),
+                 loc) =>
         val totShift = (a & 63) + (b & 63)
         if (totShift >= 64)
-          Seq(Let(n, Op.Copy(Val.Long(0))))
+          Seq(Let(n, Op.Copy(Val.Long(0)), loc))
         else
-          Seq(Let(n, Op.Bin(Lshr, Type.Long, x, Val.Long(totShift))))
+          Seq(Let(n, Op.Bin(Lshr, Type.Long, x, Val.Long(totShift)), loc))
 
       // (x >> a) >> b = x >> (a + b)  [i32]
       case Let(n,
                Op.Bin(Lshr,
                       Type.Int,
                       defop(Op.Bin(Lshr, Type.Int, x, Val.Int(a))),
-                      Val.Int(b))) =>
+                      Val.Int(b)),
+                loc) =>
         val shiftSum = (a & 31) + (b & 31)
         val totShift = math.min(shiftSum, 31)
-        Seq(Let(n, Op.Bin(Lshr, Type.Int, x, Val.Int(totShift))))
+        Seq(Let(n, Op.Bin(Lshr, Type.Int, x, Val.Int(totShift)), loc))
 
       // (x >> a) >> b = x >> (a + b)  [i64]
       case Let(n,
                Op.Bin(Lshr,
                       Type.Long,
                       defop(Op.Bin(Lshr, Type.Long, x, Val.Long(a))),
-                      Val.Long(b))) =>
+                      Val.Long(b)),
+                loc) =>
         val shiftSum = (a & 63) + (b & 63)
         val totShift = math.min(shiftSum, 63)
-        Seq(Let(n, Op.Bin(Lshr, Type.Long, x, Val.Long(totShift))))
+        Seq(Let(n, Op.Bin(Lshr, Type.Long, x, Val.Long(totShift)), loc))
 
       // ((x + a) == b) = (x == (b - a))
       case Let(n,
-               Op.Comp(Ieq, ty, defop(Op.Bin(Iadd, _, x, IVal(a))), IVal(b))) =>
-        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(b - a, ty))))
+               Op.Comp(Ieq, ty, defop(Op.Bin(Iadd, _, x, IVal(a))), IVal(b)),
+               loc) =>
+        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(b - a, ty)), loc))
 
       // ((x - a) == b) = (x == (a + b))
       case Let(n,
-               Op.Comp(Ieq, ty, defop(Op.Bin(Isub, _, x, IVal(a))), IVal(b))) =>
-        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(a + b, ty))))
+               Op.Comp(Ieq, ty, defop(Op.Bin(Isub, _, x, IVal(a))), IVal(b)),
+               loc) =>
+        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(a + b, ty)), loc))
 
       // ((a - x) == b) = (x == (a - b))
       case Let(n,
-               Op.Comp(Ieq, ty, defop(Op.Bin(Isub, _, IVal(a), x)), IVal(b))) =>
-        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(a - b, ty))))
+               Op.Comp(Ieq, ty, defop(Op.Bin(Isub, _, IVal(a), x)), IVal(b)),
+               loc) =>
+        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(a - b, ty)), loc))
 
       // ((x xor a) == b) = (x == (a xor b))
       case Let(n,
-               Op.Comp(Ieq, ty, defop(Op.Bin(Xor, _, x, IVal(a))), IVal(b))) =>
-        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(a ^ b, ty))))
+               Op.Comp(Ieq, ty, defop(Op.Bin(Xor, _, x, IVal(a))), IVal(b)),
+               loc) =>
+        Seq(Let(n, Op.Comp(Ieq, ty, x, IVal(a ^ b, ty)), loc))
 
       // ((x xor true) == y) = (x != y)
       case Let(n,
                Op.Comp(Ieq,
                        Type.Bool,
                        defop(Op.Bin(Xor, Type.Bool, x, Val.True)),
-                       y)) =>
-        Seq(Let(n, Op.Comp(Ine, Type.Bool, x, y)))
+                       y),
+               loc) =>
+        Seq(Let(n, Op.Comp(Ine, Type.Bool, x, y), loc))
 
       // (x == (y xor true)) = (x != y)
       case Let(n,
                Op.Comp(Ieq,
                        Type.Bool,
                        x,
-                       defop(Op.Bin(Xor, Type.Bool, y, Val.True)))) =>
-        Seq(Let(n, Op.Comp(Ine, Type.Bool, x, y)))
+                       defop(Op.Bin(Xor, Type.Bool, y, Val.True))),
+               loc) =>
+        Seq(Let(n, Op.Comp(Ine, Type.Bool, x, y), loc))
 
       case _ => Seq(inst)
     }

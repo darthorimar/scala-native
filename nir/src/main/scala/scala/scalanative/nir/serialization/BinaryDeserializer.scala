@@ -131,14 +131,14 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
   private def getInsts(): Seq[Inst] = getSeq(getInst)
   private def getInst(): Inst = getInt match {
     case T.NoneInst        => Inst.None
-    case T.LabelInst       => Inst.Label(getLocal, getParams)
-    case T.LetInst         => Inst.Let(getLocal, getOp)
-    case T.UnreachableInst => Inst.Unreachable
-    case T.RetInst         => Inst.Ret(getVal)
-    case T.JumpInst        => Inst.Jump(getNext)
-    case T.IfInst          => Inst.If(getVal, getNext, getNext)
-    case T.SwitchInst      => Inst.Switch(getVal, getNext, getNexts)
-    case T.ThrowInst       => Inst.Throw(getVal, getNext)
+    case T.LabelInst       => Inst.Label(getLocal, getParams, getLoc)
+    case T.LetInst         => Inst.Let(getLocal, getOp, getLoc)
+    case T.UnreachableInst => Inst.Unreachable(getLoc)
+    case T.RetInst         => Inst.Ret(getVal, getLoc)
+    case T.JumpInst        => Inst.Jump(getNext, getLoc)
+    case T.IfInst          => Inst.If(getVal, getNext, getNext, getLoc)
+    case T.SwitchInst      => Inst.Switch(getVal, getNext, getNexts, getLoc)
+    case T.ThrowInst       => Inst.Throw(getVal, getNext, getLoc)
   }
 
   private def getComp(): Comp = getInt match {

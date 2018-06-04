@@ -31,7 +31,7 @@ object BlockParamReduction extends PassCompanion {
      * corresponding parameters
      */
     override def onInsts(insts: Seq[Inst]) = insts.flatMap {
-      case Inst.Label(name, params) =>
+      case Inst.Label(name, params, loc) =>
         val paramVals = suppliedArgs.paramValues(name)
 
         val newParams = params.zip(paramVals).collect {
@@ -39,10 +39,10 @@ object BlockParamReduction extends PassCompanion {
         }
         val argCopies = params.zip(paramVals).collect {
           case (param, Some(value)) =>
-            Let(param.name, Op.Copy(value))
+            Let(param.name, Op.Copy(value), loc)
         }
 
-        val newLabel = Inst.Label(name, newParams)
+        val newLabel = Inst.Label(name, newParams, loc)
         newLabel +: argCopies
 
       case cf: Inst.Cf =>

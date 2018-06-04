@@ -22,7 +22,7 @@ class AllocLowering(implicit top: Top) extends Pass {
     import buf._
 
     insts.foreach {
-      case Let(n, Op.Classalloc(ClassRef(cls))) =>
+      case Let(n, Op.Classalloc(ClassRef(cls)), loc) =>
         val size = MemoryLayout.sizeOf(cls.layout.struct)
         val allocMethod =
           if (size < LARGE_OBJECT_MIN_SIZE) alloc else largeAlloc
@@ -31,7 +31,8 @@ class AllocLowering(implicit top: Top) extends Pass {
             Op.Call(allocSig,
                     allocMethod,
                     Seq(cls.rtti.const, Val.Long(size)),
-                    Next.None))
+                    Next.None),
+            loc)
 
       case inst =>
         buf += inst

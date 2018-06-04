@@ -25,7 +25,7 @@ class DeadCodeElimination(implicit top: Top) extends Pass {
         }
         buf += block.label.copy(params = newParams)
         block.insts.foreach {
-          case inst @ Inst.Let(n, op) =>
+          case inst @ Inst.Let(n, op, _) =>
             if (usedef(n).alive) buf += inst
           case inst: Inst.Cf =>
             buf += removeArgs.onInst(inst)

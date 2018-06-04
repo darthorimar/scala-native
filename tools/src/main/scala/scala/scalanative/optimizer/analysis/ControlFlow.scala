@@ -25,7 +25,7 @@ object ControlFlow {
     lazy val splitCount: Int = {
       var count = 0
       insts.foreach {
-        case Inst.Let(_, call: Op.Call) if call.unwind ne Next.None =>
+        case Inst.Let(_, call: Op.Call, _) if call.unwind ne Next.None =>
           count += 1
         case _ =>
           ()
@@ -35,7 +35,7 @@ object ControlFlow {
 
     def pred  = inEdges.map(_.from)
     def succ  = outEdges.map(_.to)
-    def label = Inst.Label(name, params)
+    def label = Inst.Label(name, params, Location.NoLoc) //todo: location?
     def show  = name.show
 
     def isRegular: Boolean =
@@ -90,7 +90,7 @@ object ControlFlow {
       }
 
       val blocks: Seq[Block] = insts.zipWithIndex.collect {
-        case (Inst.Label(n, params), k) =>
+        case (Inst.Label(n, params, _), k) =>
           // copy all instruction up until and including
           // first control-flow instruction after the label
           val body = mutable.UnrolledBuffer.empty[Inst]
@@ -109,25 +109,25 @@ object ControlFlow {
       blocks.foreach {
         case node @ Block(n, _, insts :+ cf, _) =>
           insts.foreach {
-            case Inst.Let(_, op: Op.Unwind) if op.unwind ne Next.None =>
+            case Inst.Let(_, op: Op.Unwind, _) if op.unwind ne Next.None =>
               edge(node, nodes(op.unwind.name), op.unwind)
             case _ =>
               ()
           }
           cf match {
-            case Inst.Unreachable | _: Inst.Ret =>
+            case _: Inst.Unreachable | _: Inst.Ret =>
               ()
-            case Inst.Jump(next) =>
+            case Inst.Jump(next, _) =>
               edge(node, nodes(next.name), next)
-            case Inst.If(_, next1, next2) =>
+            case Inst.If(_, next1, next2, _) =>
               edge(node, nodes(next1.name), next1)
               edge(node, nodes(next2.name), next2)
-            case Inst.Switch(_, default, cases) =>
+            case Inst.Switch(_, default, cases, _) =>
               edge(node, nodes(default.name), default)
               cases.foreach { case_ =>
                 edge(node, nodes(case_.name), case_)
               }
-            case Inst.Throw(_, next) =>
+            case Inst.Throw(_, next, _) =>
               if (next ne Next.None) {
                 edge(node, nodes(next.name), next)
               }

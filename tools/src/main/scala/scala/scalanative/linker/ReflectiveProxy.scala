@@ -19,7 +19,7 @@ object ReflectiveProxy {
 
     val label      = genProxyLabel(proxyArgs)
     val unboxInsts = genArgUnboxes(label)
-    val method     = Inst.Let(Op.Method(label.params.head, defn.name))
+    val method     = Inst.Let(Op.Method(label.params.head, defn.name), Location.NoLoc)
     val call       = genCall(defnType, method, label.params, unboxInsts)
     val box        = genRetValBox(call.name, defnType.ret, proxyTy.ret)
     val retInst    = genRet(box.name, proxyTy.ret)
@@ -50,15 +50,15 @@ object ReflectiveProxy {
     val argLabels = Val.Local(fresh(), args.head) ::
       args.tail.map(argty => Val.Local(fresh(), argty)).toList
 
-    Inst.Label(fresh(), argLabels)
+    Inst.Label(fresh(), argLabels, Location.NoLoc)
   }
 
   private def genArgUnboxes(label: Inst.Label) =
     label.params.tail.map {
       case local: Val.Local if Type.unbox.contains(local.ty) =>
-        Inst.Let(Op.Unbox(local.ty, local))
+        Inst.Let(Op.Unbox(local.ty, local), Location.NoLoc)
       case local: Val.Local =>
-        Inst.Let(Op.Copy(local))
+        Inst.Let(Op.Copy(local), Location.NoLoc)
     }
 
   private def genCall(defnTy: Type.Function,
@@ -76,21 +76,22 @@ object ReflectiveProxy {
         .toList
 
     Inst.Let(
-      Op.Call(defnTy, Val.Local(method.name, Type.Ptr), callParams, Next.None))
+      Op.Call(defnTy, Val.Local(method.name, Type.Ptr), callParams, Next.None),
+      Location.NoLoc)
   }
 
   private def genRetValBox(callName: Local, defnRetTy: Type, proxyRetTy: Type) =
     Type.box.get(defnRetTy) match {
       case Some(boxTy) =>
-        Inst.Let(Op.Box(boxTy, Val.Local(callName, defnRetTy)))
+        Inst.Let(Op.Box(boxTy, Val.Local(callName, defnRetTy)), Location.NoLoc)
       case None =>
-        Inst.Let(Op.Copy(Val.Local(callName, defnRetTy)))
+        Inst.Let(Op.Copy(Val.Local(callName, defnRetTy)), Location.NoLoc)
     }
 
   private def genRet(retValBoxName: Local, proxyRetTy: Type) =
     proxyRetTy match {
-      case Type.Unit => Inst.Ret(Val.Unit)
-      case _         => Inst.Ret(Val.Local(retValBoxName, proxyRetTy))
+      case Type.Unit => Inst.Ret(Val.Unit, Location.NoLoc)
+      case _         => Inst.Ret(Val.Local(retValBoxName, proxyRetTy), Location.NoLoc)
     }
 
   def genAllReflectiveProxies(

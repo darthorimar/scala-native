@@ -113,43 +113,51 @@ final class BinarySerializer(buffer: ByteBuffer) {
     case Inst.None =>
       putInt(T.NoneInst)
 
-    case Inst.Label(name, params) =>
+    case Inst.Label(name, params, loc) =>
       putInt(T.LabelInst)
       putLocal(name)
       putParams(params)
+      putLoc(loc)
 
-    case Inst.Let(name, op) =>
+    case Inst.Let(name, op, loc) =>
       putInt(T.LetInst)
       putLocal(name)
       putOp(op)
+      putLoc(loc)
 
-    case Inst.Unreachable =>
+    case Inst.Unreachable(loc) =>
       putInt(T.UnreachableInst)
+      putLoc(loc)
 
-    case Inst.Ret(v) =>
+    case Inst.Ret(v, loc) =>
       putInt(T.RetInst)
       putVal(v)
+      putLoc(loc)
 
-    case Inst.Jump(next) =>
+    case Inst.Jump(next, loc) =>
       putInt(T.JumpInst)
       putNext(next)
+      putLoc(loc)
 
-    case Inst.If(v, thenp, elsep) =>
+    case Inst.If(v, thenp, elsep, loc) =>
       putInt(T.IfInst)
       putVal(v)
       putNext(thenp)
       putNext(elsep)
+      putLoc(loc)
 
-    case Inst.Switch(v, default, cases) =>
+    case Inst.Switch(v, default, cases, loc) =>
       putInt(T.SwitchInst)
       putVal(v)
       putNext(default)
       putNexts(cases)
+      putLoc(loc)
 
-    case Inst.Throw(v, unwind) =>
+    case Inst.Throw(v, unwind, loc) =>
       putInt(T.ThrowInst)
       putVal(v)
       putNext(unwind)
+      putLoc(loc)
   }
 
   private def putComp(comp: Comp) = comp match {
@@ -190,64 +198,64 @@ final class BinarySerializer(buffer: ByteBuffer) {
   private def putDefn(value: Defn): Unit = value match {
     case Defn.Var(attrs, name, ty, value, loc) =>
       putInt(T.VarDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
       putVal(value)
+      putLoc(loc)
 
     case Defn.Const(attrs, name, ty, value, loc) =>
       putInt(T.ConstDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
       putVal(value)
+      putLoc(loc)
 
     case Defn.Declare(attrs, name, ty, loc) =>
       putInt(T.DeclareDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
+      putLoc(loc)
 
     case Defn.Define(attrs, name, ty, insts, loc) =>
       putInt(T.DefineDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putType(ty)
       putInsts(insts)
+      putLoc(loc)
 
     case Defn.Struct(attrs, name, members, loc) =>
       putInt(T.StructDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putTypes(members)
+      putLoc(loc)
 
     case Defn.Trait(attrs, name, ifaces, loc) =>
       putInt(T.TraitDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putGlobals(ifaces)
+      putLoc(loc)
 
     case Defn.Class(attrs, name, parent, ifaces, loc) =>
       putInt(T.ClassDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putGlobalOpt(parent)
       putGlobals(ifaces)
+      putLoc(loc)
 
     case Defn.Module(attrs, name, parent, ifaces, loc) =>
       putInt(T.ModuleDefn)
-      putLoc(loc)
       putAttrs(attrs)
       putGlobal(name)
       putGlobalOpt(parent)
       putGlobals(ifaces)
+      putLoc(loc)
   }
 
 
@@ -278,10 +286,19 @@ final class BinarySerializer(buffer: ByteBuffer) {
 
   private def putNexts(nexts: Seq[Next]) = putSeq(nexts)(putNext)
   private def putNext(next: Next) = next match {
-    case Next.None         => putInt(T.NoneNext)
-    case Next.Unwind(n)    => putInt(T.UnwindNext); putLocal(n)
-    case Next.Label(n, vs) => putInt(T.LabelNext); putLocal(n); putVals(vs)
-    case Next.Case(v, n)   => putInt(T.CaseNext); putVal(v); putLocal(n)
+    case Next.None =>
+      putInt(T.NoneNext)
+    case Next.Unwind(n) =>
+      putInt(T.UnwindNext)
+      putLocal(n)
+    case Next.Label(n, vs) =>
+      putInt(T.LabelNext)
+      putLocal(n)
+      putVals(vs)
+    case Next.Case(v, n) =>
+      putInt(T.CaseNext)
+      putVal(v)
+      putLocal(n)
   }
 
   private def putOp(op: Op) = op match {

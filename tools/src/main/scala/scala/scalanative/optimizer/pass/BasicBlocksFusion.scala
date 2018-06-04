@@ -52,7 +52,7 @@ class BasicBlocksFusion extends Pass {
     val (codeEnding, succWork) = blockCf match {
       // We only fuse if we have a Jump instruction
       // All other cases should reduce to a Jump after CfChainsSimplification
-      case Jump(Next.Label(_, args))
+      case Jump(Next.Label(_, args), loc)
           if (block.succ.size == 1 && block.succ.head.pred.size == 1 && block.succ.head.name != entryBlock.name) =>
         val nextBlock          = block.succ.head
         val (recCode, recWork) = fusedBlockCode(nextBlock, entryBlock)
@@ -61,7 +61,7 @@ class BasicBlocksFusion extends Pass {
         // Replace the parameters of the fused block with the supplied arguments
         val paramDef = params.zip(args).map {
           case (param, arg) =>
-            Let(param, Op.Copy(arg))
+            Let(param, Op.Copy(arg), loc)
         }
 
         // need to drop the first instruction of recCode, as it is the block label

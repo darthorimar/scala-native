@@ -24,13 +24,14 @@ class HasTrait(implicit top: Top) extends Inject {
       ClassHasTraitName,
       ClassHasTraitSig,
       Seq(
-        Inst.Label(fresh(), Seq(classid, traitid)),
+        Inst.Label(fresh(), Seq(classid, traitid), Location.NoLoc),
         Inst.Let(boolptr.name,
                  Op.Elem(tables.classHasTraitTy,
                          tables.classHasTraitVal,
-                         Seq(Val.Int(0), classid, traitid))),
-        Inst.Let(result.name, Op.Load(Type.Bool, boolptr)),
-        Inst.Ret(result)
+                         Seq(Val.Int(0), classid, traitid)),
+                 Location.NoLoc),
+        Inst.Let(result.name, Op.Load(Type.Bool, boolptr), Location.NoLoc),
+        Inst.Ret(result, Location.NoLoc)
       ),
       Location.NoLoc //todo location?
     )
@@ -41,21 +42,22 @@ class HasTrait(implicit top: Top) extends Inject {
     val leftid, rightid = Val.Local(fresh(), Type.Int)
     val boolptr         = Val.Local(fresh(), Type.Ptr)
     val result          = Val.Local(fresh(), Type.Bool)
-
+    val loc = Location.NoLoc //todo location?
     Defn.Define(
       Attrs(isExtern = true, inline = Attr.AlwaysInline),
       TraitHasTraitName,
       TraitHasTraitSig,
       Seq(
-        Inst.Label(fresh(), Seq(leftid, rightid)),
+        Inst.Label(fresh(), Seq(leftid, rightid), loc),
         Inst.Let(boolptr.name,
                  Op.Elem(tables.traitHasTraitTy,
                          tables.traitHasTraitVal,
-                         Seq(Val.Int(0), leftid, rightid))),
-        Inst.Let(result.name, Op.Load(Type.Bool, boolptr)),
-        Inst.Ret(result)
+                         Seq(Val.Int(0), leftid, rightid)),
+                 loc),
+        Inst.Let(result.name, Op.Load(Type.Bool, boolptr), loc),
+        Inst.Ret(result, loc)
       ),
-      Location.NoLoc //todo location?
+      loc
     )
   }
 

@@ -20,25 +20,26 @@ class DynmethodLowering(implicit top: Top) extends Pass {
     import buf._
 
     insts.foreach {
-      case Inst.Let(n, dyn @ Op.Dynmethod(obj, signature)) =>
+      case Inst.Let(n, dyn @ Op.Dynmethod(obj, signature), loc) =>
         def throwInstrs(): Unit = {
-          val exc = let(Op.Classalloc(excptnGlobal))
+          val exc = let(Op.Classalloc(excptnGlobal), loc)
           let(
             Op.Call(excInitSig,
                     excInit,
                     Seq(exc, Val.String(signature)),
-                    Next.None))
-          raise(exc, Next.None)
+                    Next.None),
+            loc)
+          raise(exc, Next.None, loc)
         }
 
         def throwIfCond(cond: Op.Comp): Unit = {
           val labelIsNull, labelEndNull = Next(fresh())
 
-          val condNull = let(cond)
-          branch(condNull, labelIsNull, labelEndNull)
-          label(labelIsNull.name)
+          val condNull = let(cond, loc)
+          branch(condNull, labelIsNull, labelEndNull, loc)
+          label(labelIsNull.name, loc)
           throwInstrs()
-          label(labelEndNull.name)
+          label(labelEndNull.name, loc)
         }
 
         def throwIfNull(value: Val) =
@@ -48,23 +49,24 @@ class DynmethodLowering(implicit top: Top) extends Pass {
           top.dyns.zipWithIndex.find(_._1 == signature).get._2
 
         // Load the type information pointer
-        val typeptr = let(Op.Load(Type.Ptr, obj))
+        val typeptr = let(Op.Load(Type.Ptr, obj), loc)
         // Load the pointer of the table size
         val methodCountPtr = let(
-          Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3), Val.Int(0))))
+          Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3), Val.Int(0))), loc)
         // Load the table size
-        val methodCount = let(Op.Load(Type.Int, methodCountPtr))
+        val methodCount = let(Op.Load(Type.Int, methodCountPtr), loc)
         throwIfCond(Op.Comp(Comp.Ieq, Type.Int, methodCount, Val.Int(0)))
         // If the size is greater than 0, call the dyndispatch runtime function
         val dyndispatchTablePtr = let(
-          Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3), Val.Int(0))))
+          Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3), Val.Int(0))), loc)
         val methptrptr = let(
           Op.Call(dyndispatchSig,
                   dyndispatch,
                   Seq(dyndispatchTablePtr, Val.Int(methodIndex)),
-                  Next.None))
+                  Next.None),
+                  loc)
         throwIfNull(methptrptr)
-        let(n, Op.Load(Type.Ptr, methptrptr))
+        let(n, Op.Load(Type.Ptr, methptrptr), loc)
 
       case inst =>
         buf += inst

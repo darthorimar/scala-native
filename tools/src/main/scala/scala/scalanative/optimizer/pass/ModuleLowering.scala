@@ -58,13 +58,13 @@ class ModuleLowering(implicit top: Top) extends Pass {
         val cond  = Val.Local(fresh(), Type.Bool)
         val alloc = Val.Local(fresh(), clsTy)
 
-        val initCall = if (isStaticModule(clsName)) {
+        val initCall: Inst = if (isStaticModule(clsName)) {
           Inst.None
         } else {
           val initSig = Type.Function(Seq(Type.Class(clsName)), Type.Void)
           val init    = Val.Global(clsName member "init", Type.Ptr)
 
-          Inst.Let(Op.Call(initSig, init, Seq(alloc), Next.None))
+          Inst.Let(Op.Call(initSig, init, Seq(alloc), Next.None), loc)
         }
 
         val loadName = clsName member "load"
@@ -74,21 +74,22 @@ class ModuleLowering(implicit top: Top) extends Pass {
           loadName,
           loadSig,
           Seq(
-            Inst.Label(entry, Seq()),
+            Inst.Label(entry, Seq(), loc),
             Inst.Let(slot.name,
                      Op.Elem(Type.Ptr,
                              Val.Global(Global.Top("__modules"), Type.Ptr),
-                             Seq(Val.Int(top.moduleArray.index(cls))))),
-            Inst.Let(self.name, Op.Load(clsTy, slot)),
-            Inst.Let(cond.name, Op.Comp(Comp.Ine, Rt.Object, self, Val.Null)),
-            Inst.If(cond, Next(existing), Next(initialize)),
-            Inst.Label(existing, Seq()),
-            Inst.Ret(self),
-            Inst.Label(initialize, Seq()),
-            Inst.Let(alloc.name, Op.Classalloc(clsName)),
-            Inst.Let(Op.Store(clsTy, slot, alloc)),
+                             Seq(Val.Int(top.moduleArray.index(cls)))),
+                     loc),
+            Inst.Let(self.name, Op.Load(clsTy, slot), loc),
+            Inst.Let(cond.name, Op.Comp(Comp.Ine, Rt.Object, self, Val.Null), loc),
+            Inst.If(cond, Next(existing), Next(initialize), loc),
+            Inst.Label(existing, Seq(), loc),
+            Inst.Ret(self, loc),
+            Inst.Label(initialize, Seq(), loc),
+            Inst.Let(alloc.name, Op.Classalloc(clsName), loc),
+            Inst.Let(Op.Store(clsTy, slot, alloc), loc),
             initCall,
-            Inst.Ret(alloc)
+            Inst.Ret(alloc, loc)
           ),
           loc
         )
@@ -104,11 +105,11 @@ class ModuleLowering(implicit top: Top) extends Pass {
   }
 
   override def onInst(inst: Inst): Inst = inst match {
-    case Inst.Let(n, Op.Module(name, unwind)) =>
+    case Inst.Let(n, Op.Module(name, unwind), loc) =>
       val loadSig = Type.Function(Seq(), Type.Class(name))
       val load    = Val.Global(name member "load", Type.Ptr)
 
-      Inst.Let(n, Op.Call(loadSig, load, Seq(), unwind))
+      Inst.Let(n, Op.Call(loadSig, load, Seq(), unwind), loc)
 
     case _ =>
       super.onInst(inst)

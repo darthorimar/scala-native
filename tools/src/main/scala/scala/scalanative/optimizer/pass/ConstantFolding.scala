@@ -128,9 +128,9 @@ class ConstantFolding extends Pass {
   }
 
   override def onInst(inst: Inst): Inst = inst match {
-    case inst @ Inst.Let(n, op) =>
+    case inst @ Inst.Let(n, op, loc) =>
       val newInst = emulate.lift(op) match {
-        case Some(newVal) => Let(n, Op.Copy(newVal))
+        case Some(newVal) => Let(n, Op.Copy(newVal), loc)
         case None         => inst
       }
       newInst

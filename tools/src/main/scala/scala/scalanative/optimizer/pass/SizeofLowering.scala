@@ -14,8 +14,8 @@ class SizeofLowering(top: Top) extends Pass {
 
     insts.foreach {
 
-      case Inst.Let(n, Op.Sizeof(ty)) =>
-        let(n, Op.Copy(Val.Long(MemoryLayout.sizeOf(ty))))
+      case Inst.Let(n, Op.Sizeof(ty), loc) =>
+        let(n, Op.Copy(Val.Long(MemoryLayout.sizeOf(ty))), loc)
 
       case inst =>
         buf += inst

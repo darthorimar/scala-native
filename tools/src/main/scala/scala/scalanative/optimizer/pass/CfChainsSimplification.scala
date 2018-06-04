@@ -48,7 +48,7 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
 
       // If the target block of this jump is only a comprised of
       // a single Cf instruction, replace our jump with this next Cf
-      case Jump(Next.Label(targetName, args)) =>
+      case Jump(Next.Label(targetName, args), loc) =>
         val targetBlock = method.cfg.find(targetName)
         targetBlock.insts match {
 
@@ -76,31 +76,31 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
           case _ => cfInst
         }
 
-      case If(Val.True, next, _) =>
-        Jump(next)
+      case If(Val.True, next, _, loc) =>
+        Jump(next, loc)
 
-      case If(Val.False, _, next) =>
-        Jump(next)
+      case If(Val.False, _, next, loc) =>
+        Jump(next, loc)
 
-      case If(cond, thenp, elsep) =>
-        If(cond, simplifyIfBranch(thenp), simplifyIfBranch(elsep))
+      case If(cond, thenp, elsep, loc) =>
+        If(cond, simplifyIfBranch(thenp), simplifyIfBranch(elsep) ,loc)
 
-      case Switch(value, default, Seq()) =>
-        Jump(default)
+      case Switch(value, default, Seq(), loc) =>
+        Jump(default, loc)
 
-      case Switch(value, default, cases) if (staticValue(value)) =>
+      case Switch(value, default, cases, loc) if (staticValue(value)) =>
         val next = cases
           .collectFirst {
             case Next.Case(caseVal, targetName) if (caseVal == value) =>
               Next.Label(targetName, Seq.empty)
           }
           .getOrElse(default)
-        Jump(next)
+        Jump(next, loc)
 
-      case Switch(value, default, cases) =>
+      case Switch(value, default, cases, loc) =>
         Switch(value,
                simplifySwitchCase(default),
-               cases.map(simplifySwitchCase(_)))
+               cases.map(simplifySwitchCase(_)), loc)
 
       case _ => cfInst
     }
@@ -117,10 +117,11 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
       // The problem only occurs when the two destination blocks are the same
       case If(cond,
               thenNext @ Next.Label(thenName, thenArgs),
-              Next.Label(elseName, elseArgs)) if (thenName == elseName) =>
+              Next.Label(elseName, elseArgs),
+              loc) if (thenName == elseName) =>
         // if both branches provide the same arguments, we simply have a jump
         if (thenArgs == elseArgs) {
-          Seq(Jump(thenNext))
+          Seq(Jump(thenNext, loc))
         }
         // otherwise, we change the `if` to a select (for the argument values)
         // followed by a jump
@@ -130,12 +131,12 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
             .map {
               case (thenV, elseV) =>
                 val freshVar   = fresh()
-                val selectInst = Let(freshVar, Op.Select(cond, thenV, elseV))
+                val selectInst = Let(freshVar, Op.Select(cond, thenV, elseV), loc)
                 (Val.Local(freshVar, thenV.ty), selectInst)
             }
             .unzip
 
-          selects :+ Jump(Next.Label(thenName, newArgs))
+          selects :+ Jump(Next.Label(thenName, newArgs), loc)
         }
 
       case _ => Seq(inst)
@@ -148,14 +149,14 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
   private def simplifyIfBranch(branch: Next)(
       implicit method: MethodInfo): Next = {
     var newBranch       = branch
-    var currentCf: Inst = Jump(branch)
+    var currentCf: Inst = Jump(branch, Location.NoLoc) //todo: location?
     var continue        = true
 
     while (continue) {
       val optSeq = simplifyCfOnce(currentCf)
       optSeq match {
         // if we have more than one instruction, we can't use the result
-        case Seq(Jump(next)) => newBranch = next
+        case Seq(Jump(next, _)) => newBranch = next
         case _               =>
       }
       val newCf = optSeq.last
@@ -177,14 +178,14 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
     swCase match {
       case Next.Case(value, name) => {
         var newLocalJump    = name
-        var currentCf: Inst = Jump(Next.Label(name, Seq.empty))
+        var currentCf: Inst = Jump(Next.Label(name, Seq.empty), Location.NoLoc) //todo: location?
         var continue        = true
 
         while (continue) {
           val optSeq = simplifyCfOnce(currentCf)
           optSeq match {
             // Can only use the result when there is one instruction and no parameters
-            case Seq(Jump(Next.Label(newLocal, Seq()))) =>
+            case Seq(Jump(Next.Label(newLocal, Seq()), _)) =>
               newLocalJump = newLocal
             case _ =>
           }
