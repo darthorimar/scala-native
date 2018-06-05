@@ -408,7 +408,7 @@ trait NirGenExpr { self: NirGenPhase =>
     def genReturn(tree: Return): Val = {
       val Return(exprp) = tree
       val res           = genExpr(exprp)
-      buf.ret(res)
+      buf.ret(res, getLoc(tree))
       Val.Unit
     }
 
