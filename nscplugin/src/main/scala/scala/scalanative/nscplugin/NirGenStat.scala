@@ -64,8 +64,12 @@ trait NirGenStat { self: NirGenPhase =>
     private val buf          = mutable.UnrolledBuffer.empty[nir.Defn]
     def toSeq: Seq[nir.Defn] = buf
 
-    def posToLoc(pos: Position): Location.Location =
+    def getLoc(pos: Position): Location.Location =
       Location.LocData(pos.source.file.file.toPath, pos.line)
+
+    def getLoc(tree: Tree): Location.Location =
+      getLoc(tree.pos)
+
 
     def genClass(cd: ClassDef): Unit = {
       scoped(
@@ -82,7 +86,7 @@ trait NirGenStat { self: NirGenPhase =>
       val name   = genTypeName(sym)
       val fields = genStructFields(sym)
       val body   = cd.impl.body
-      val loc    = posToLoc(cd.pos)
+      val loc    = getLoc(cd.pos)
 
       buf += Defn.Struct(attrs, name, fields, loc)
       genMethods(cd)
@@ -96,7 +100,7 @@ trait NirGenStat { self: NirGenPhase =>
       def name   = genTypeName(sym)
       def parent = genClassParent(sym)
       def traits = genClassInterfaces(sym)
-      val loc = posToLoc(cd.pos)
+      val loc = getLoc(cd.pos)
 
 
       genClassFields(sym)
@@ -166,7 +170,7 @@ trait NirGenStat { self: NirGenPhase =>
       for (f <- sym.info.decls if f.isField) {
         val ty   = genType(f.tpe, box = false)
         val name = genFieldName(f)
-        val loc = posToLoc(f.pos)
+        val loc = getLoc(f.pos)
 
         buf += Defn.Var(attrs, name, ty, Val.None, loc)
       }
@@ -198,7 +202,7 @@ trait NirGenStat { self: NirGenPhase =>
         val isStatic = owner.isExternModule || owner.isImplClass
         val sig      = genMethodSig(sym, isStatic)
         val params   = genParams(dd, isStatic)
-        val loc      = posToLoc(dd.pos)
+        val loc      = getLoc(dd.pos)
 
         dd.rhs match {
           case EmptyTree =>
@@ -357,10 +361,10 @@ trait NirGenStat { self: NirGenPhase =>
 
       def genPrelude(): Unit = {
         val vars = curMethodInfo.mutableVars.toSeq
-        buf.label(fresh(), params, Location.NoLoc)
+        buf.label(fresh(), params, getLoc(dd))
         vars.foreach { sym =>
           val ty    = genType(sym.info, box = false)
-          val alloc = buf.stackalloc(ty, Val.None)
+          val alloc = buf.stackalloc(ty, Val.None, getLoc(dd))
           curMethodEnv.enter(sym, alloc)
         }
       }
@@ -373,7 +377,7 @@ trait NirGenStat { self: NirGenPhase =>
           val local  = curMethodEnv.enterLabel(label)
           val values = params.take(label.params.length)
 
-          buf.jump(local, values)
+          buf.jump(local, values, getLoc(bodyp))
           scoped(
             curMethodThis := {
               if (isStatic) None
@@ -398,7 +402,7 @@ trait NirGenStat { self: NirGenPhase =>
       }
 
       genPrelude()
-      buf.ret(genBody())
+      buf.ret(genBody(), getLoc(dd))
       buf.toSeq
     }
 
@@ -429,7 +433,7 @@ trait NirGenStat { self: NirGenPhase =>
           val params = genParams(apply, isStatic = true)
           val body =
             genNormalMethodBody(apply, params, apply.rhs, isStatic = true)
-          val loc = posToLoc(apply.pos)
+          val loc = getLoc(apply.pos)
 
           buf += Defn.Define(attrs, name, sig, body, loc)
 

@@ -3,8 +3,7 @@ package nir
 
 import scala.scalanative.nir.Location.{Location, WithLocation}
 
-sealed abstract class Defn extends WithLocation{
-  println(show)
+sealed abstract class Defn extends WithLocation {
   def name: Global
   def attrs: Attrs
 

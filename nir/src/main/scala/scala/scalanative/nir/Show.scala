@@ -463,8 +463,8 @@ object Show {
 
     def defn_(defn: Defn): Unit = defn match {
       case Defn.Var(attrs, name, ty, v, loc) =>
-        attrs_(attrs)
         loc_(loc)
+        attrs_(attrs)
         str("var ")
         global_(name)
         str(" : ")
@@ -474,8 +474,8 @@ object Show {
           val_(v)
         }
       case Defn.Const(attrs, name, ty, v, loc) =>
-        attrs_(attrs)
         loc_(loc)
+        attrs_(attrs)
         str("const ")
         global_(name)
         str(" : ")
@@ -485,15 +485,15 @@ object Show {
           val_(v)
         }
       case Defn.Declare(attrs, name, ty, loc) =>
-        attrs_(attrs)
         loc_(loc)
+        attrs_(attrs)
         str("def ")
         global_(name)
         str(" : ")
         type_(ty)
       case Defn.Define(attrs, name, ty, insts, loc) =>
-        attrs_(attrs)
         loc_(loc)
+        attrs_(attrs)
         str("def ")
         global_(name)
         str(" : ")
@@ -512,16 +512,16 @@ object Show {
         newline()
         str("}")
       case Defn.Struct(attrs, name, tys, loc) =>
-        attrs_(attrs)
         loc_(loc)
+        attrs_(attrs)
         str("struct ")
         global_(name)
         str(" {")
         rep(tys, sep = ", ")(type_)
         str("}")
       case Defn.Trait(attrs, name, ifaces, loc) =>
-        attrs_(attrs)
         loc_(loc)
+        attrs_(attrs)
         str("trait ")
         global_(name)
         if (ifaces.nonEmpty) {
@@ -540,8 +540,8 @@ object Show {
         }
       case Defn.Module(attrs, name, parent, ifaces, loc) =>
         val parents = parent ++: ifaces
-        attrs_(attrs)
         loc_(loc)
+        attrs_(attrs)
         str("module ")
         global_(name)
         if (parents.nonEmpty) {

@@ -83,7 +83,7 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
         Jump(next, loc)
 
       case If(cond, thenp, elsep, loc) =>
-        If(cond, simplifyIfBranch(thenp), simplifyIfBranch(elsep) ,loc)
+        If(cond, simplifyIfBranch(thenp, loc), simplifyIfBranch(elsep, loc), loc)
 
       case Switch(value, default, Seq(), loc) =>
         Jump(default, loc)
@@ -146,10 +146,10 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
   /* To simplify a normal `if` branch, imagine it is a simple `jump`, and try to optimize
    * the latter. After that, keep the most optimized `jump` instruction, and get its next
    */
-  private def simplifyIfBranch(branch: Next)(
+  private def simplifyIfBranch(branch: Next, loc: Location.Location)(
       implicit method: MethodInfo): Next = {
     var newBranch       = branch
-    var currentCf: Inst = Jump(branch, Location.NoLoc) //todo: location?
+    var currentCf: Inst = Jump(branch, loc)
     var continue        = true
 
     while (continue) {

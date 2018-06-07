@@ -31,7 +31,7 @@ class IsLowering(implicit top: Top) extends Pass {
         jump(contL, Seq(res1), loc)
         // otherwise, do an actual instance check
         label(elseL, loc)
-        val res2 = genIs(buf, ty, obj)
+        val res2 = genIs(buf, ty, obj, loc)
         jump(contL, Seq(res2), loc)
         // merge the result of two branches
         label(contL, Seq(result), loc)
@@ -44,17 +44,15 @@ class IsLowering(implicit top: Top) extends Pass {
     buf.toSeq
   }
 
-  private def genIs(buf: Buffer, ty: Type, obj: Val): Val = {
+  private def genIs(buf: Buffer, ty: Type, obj: Val, loc: Location.Location): Val = {
     import buf._
 
     ty match {
       case ClassRef(cls) if cls.range.length == 1 =>
-        val loc = Location.NoLoc //todo: location?
         val typeptr = let(Op.Load(Type.Ptr, obj), loc)
         let(Op.Comp(Comp.Ieq, Type.Ptr, typeptr, cls.rtti.const), loc)
 
       case ClassRef(cls) =>
-        val loc = Location.NoLoc //todo: location?
         val typeptr = let(Op.Load(Type.Ptr, obj), loc)
         val idptr   = let(Op.Elem(Rt.Type, typeptr, Seq(Val.Int(0), Val.Int(0))), loc)
         val id      = let(Op.Load(Type.Int, idptr), loc)
@@ -63,7 +61,6 @@ class IsLowering(implicit top: Top) extends Pass {
         let(Op.Bin(Bin.And, Type.Bool, ge, le), loc)
 
       case TraitRef(trt) =>
-        val loc = Location.NoLoc //todo: location?
         val typeptr = let(Op.Load(Type.Ptr, obj), loc)
         val idptr   = let(Op.Elem(Rt.Type, typeptr, Seq(Val.Int(0), Val.Int(0))), loc)
         val id      = let(Op.Load(Type.Int, idptr), loc)
