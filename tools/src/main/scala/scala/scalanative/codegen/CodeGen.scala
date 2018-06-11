@@ -105,6 +105,8 @@ object CodeGen {
               defn.copy(attrs.copy(isExtern = true))
             case defn @ Defn.Define(attrs, _, _, _, _) =>
               defn.copy(attrs.copy(isExtern = true), insts = Seq())
+            case defn: Defn.Meta =>
+              defn
           }
         }
         generated += nn
@@ -178,6 +180,7 @@ object CodeGen {
           str(" = private unnamed_addr constant ")
           genVal(v)
       }
+
 
     def genDefn(defn: Defn): Unit = defn match {
       case Defn.Struct(attrs, name, tys, loc) =>

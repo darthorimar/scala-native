@@ -2,11 +2,13 @@ package scala.scalanative
 package nscplugin
 
 import java.nio.file.{Path, Paths}
+
 import scala.tools.nsc._
 import scala.tools.nsc.io.AbstractFile
-import scala.scalanative.nir.serialization.{serializeText, serializeBinary}
+import scala.scalanative.nir.serialization.{serializeBinary, serializeText}
 import scala.scalanative.io.withScratchBuffer
 import scala.scalanative.io.VirtualDirectory
+import scala.scalanative.nir.Defn
 
 trait NirGenFile { self: NirGenPhase =>
   import global._
@@ -31,11 +33,16 @@ trait NirGenFile { self: NirGenPhase =>
       buffer.flip
       VirtualDirectory.local(path.getParent).write(path, buffer)
     }
-    val textPath = Paths.get(path.toString + "nirt")
-    withScratchBuffer { buffer =>
-      serializeText(defns, buffer)
-      buffer.flip
-      VirtualDirectory.local(textPath.getParent).write(textPath, buffer)
+
+
+    if (path.toString.toLowerCase.contains("test")) {
+      println(Console.BLUE + "Hi :)" + Console.RESET)
+      val textPath = Paths.get(path.toString + "nirt")
+      withScratchBuffer { buffer =>
+        serializeText(defns, buffer)
+        buffer.flip
+        VirtualDirectory.local(textPath.getParent).write(textPath, buffer)
+      }
     }
   }
 }

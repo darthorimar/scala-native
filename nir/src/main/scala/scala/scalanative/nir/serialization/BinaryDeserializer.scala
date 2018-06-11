@@ -201,6 +201,9 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
 
     case T.ModuleDefn =>
       Defn.Module(getAttrs, getGlobal, getGlobalOpt, getGlobals, getLoc)
+
+    case T.MetaDefn =>
+      Defn.Meta(getSeq { (getDi, getDiLabel) })
   }
 
   private def getGlobals(): Seq[Global]      = getSeq(getGlobal)
@@ -226,6 +229,24 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
     val scope = getString // ignored
     Local(getInt)
   }
+
+  private def getDiLabel(): DiLabel = {
+    DiLabel(getInt)
+  }
+
+  private def getDi(): DebugInf = getInt match {
+    case T.DIFile =>
+      DIFile(getString, getString)
+    case T.DILocation =>
+      DILocation(getInt, getInt, DISubprogram())
+//    case T.DISubprogram =>
+//      DISubprogram()
+  }
+
+//  private def getDiScope(): DIScope = getInt match {
+//    case T.DISubprogram =>
+//      DISubprogram()
+//  }
 
   private def getNexts(): Seq[Next] = getSeq(getNext)
   private def getNext(): Next = getInt match {
@@ -299,9 +320,9 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
 
   private def getVals(): Seq[Val] = getSeq(getVal)
   private def getLoc(): Location.Location = getInt match {
-    case T.NoLoc   => Location.NoLoc
+    case T.None   => Location.NoLoc
     case T.LocData =>
-      Location.LocData(Paths.get(getString), getInt)
+      Location.LocLabel(getDiLabel)
   }
   private def getVal(): Val = getInt match {
     case T.NoneVal   => Val.None

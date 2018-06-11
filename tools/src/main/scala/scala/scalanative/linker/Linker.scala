@@ -1,13 +1,15 @@
 package scala.scalanative
 package linker
 
-import scala.collection.mutable
-import scalanative.nir._
-import scalanative.nir.serialization._
-import scalanative.io.VirtualDirectory
-import scalanative.util.Scope
+import java.nio.file.Paths
 
+import scala.collection.mutable
+import scala.scalanative.nir._
+import scala.scalanative.nir.serialization._
+import scala.scalanative.io.VirtualDirectory
+import scala.scalanative.util.Scope
 import ReflectiveProxy._
+import scala.scalanative.build.Mode
 
 sealed trait Linker {
 

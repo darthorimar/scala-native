@@ -37,6 +37,7 @@ abstract class NirGenPhase
   protected val curFresh      = new util.ScopedVar[nir.Fresh]
   protected val curUnwind     = new util.ScopedVar[nir.Next]
   protected val curStatBuffer = new util.ScopedVar[StatBuffer]
+  protected val curDiMan      = new nir.DiMan
 
   protected def lazyAnonDefs =
     curLazyAnonDefs.get
@@ -90,6 +91,7 @@ abstract class NirGenPhase
           curStatBuffer := buffer
         ) {
           buffer.genClass(cd)
+          buffer.genDi()
           files += ((path, buffer.toSeq))
         }
       }
@@ -100,6 +102,7 @@ abstract class NirGenPhase
         collectClassDefs(cunit.body)
         classDefs.foreach(genClass)
         lazyAnonDefs.values.foreach(genClass)
+
         files.par.foreach {
           case (path, stats) =>
             genIRFile(path, stats)

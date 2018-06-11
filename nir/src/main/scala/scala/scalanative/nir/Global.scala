@@ -1,7 +1,7 @@
 package scala.scalanative
 package nir
 
-sealed abstract class Global {
+sealed abstract class   Global {
   def id: String
   def top: Global.Top
 

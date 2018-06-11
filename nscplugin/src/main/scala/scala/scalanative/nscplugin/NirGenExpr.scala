@@ -48,15 +48,8 @@ trait NirGenExpr { self: NirGenPhase =>
       this ++= other.toSeq
   }
 
-  class ExprBuffer(implicit fresh: Fresh) extends FixupBuffer { buf =>
 
-    def getLoc(pos: Position): Location.Location =
-      scala.util.Try{Location.LocData(pos.source.file.file.toPath, pos.line)}
-        .toOption
-        .getOrElse(Location.NoLoc)
-
-    def getLoc(tree: Tree): Location.Location =
-      getLoc(tree.pos)
+  class ExprBuffer(implicit fresh: Fresh, diMan: DiMan) extends FixupBuffer { buf =>
 
     def genExpr(tree: Tree): Val = tree match {
       case EmptyTree =>

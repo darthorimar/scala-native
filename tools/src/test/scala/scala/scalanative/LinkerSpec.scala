@@ -5,10 +5,10 @@ import scala.language.implicitConversions
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 
-import scalanative.build.{ScalaNative, Config, Mode}
-import scalanative.util.Scope
-import scalanative.nir.Global
-import scalanative.optimizer.Driver
+import scala.scalanative.build.{ScalaNative, Config, Mode}
+import scala.scalanative.util.Scope
+import scala.scalanative.nir.Global
+import scala.scalanative.optimizer.Driver
 
 import org.scalatest.FlatSpec
 

@@ -100,6 +100,7 @@ object Tags {
   final val TraitDefn   = 1 + StructDefn
   final val ClassDefn   = 1 + TraitDefn
   final val ModuleDefn  = 1 + ClassDefn
+  final val MetaDefn    = 1 + ModuleDefn
 
   // Control-flow ops
 
@@ -217,6 +218,14 @@ object Tags {
 
   final val Loc = Val + 32
 
-  final val NoLoc   = 1 + Loc
-  final val LocData = 1 + NoLoc
+  final val None    = 1 + Loc
+  final val LocData = 1 + None
+
+  // DebugInfs
+
+  final val DebugInfo = Loc + 32
+
+  final val DIFile       = 1 + DebugInfo
+  final val DILocation   = 1 + DIFile
+  final val DISubprogram = 1 + DILocation
 }

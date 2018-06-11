@@ -1,7 +1,9 @@
 package scala.scalanative
 package nscplugin
 
-import scalanative.util.unsupported
+import scala.scalanative.util.unsupported
+
+import scala.scalanative.nir.{DILocation, DebugInf, Location}
 
 trait NirGenUtil { self: NirGenPhase =>
   import global._
@@ -9,6 +11,17 @@ trait NirGenUtil { self: NirGenPhase =>
   import nirAddons._
   import nirDefinitions._
   import SimpleType.fromSymbol
+
+  def getLoc(pos: Position): Location.Location = {
+    val dILoc = DILocation(pos.line, pos.column, DebugInf.defaultScope)
+    val label = curDiMan.genDiLabel(dILoc)
+    Location.LocLabel(label)
+  }
+
+
+  def getLoc(tree: Tree): Location.Location =
+    getLoc(tree.pos)
+
 
   def genParamSyms(dd: DefDef, isStatic: Boolean): Seq[Option[Symbol]] = {
     val vp     = dd.vparamss

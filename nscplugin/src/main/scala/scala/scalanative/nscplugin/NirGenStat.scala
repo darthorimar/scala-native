@@ -64,12 +64,9 @@ trait NirGenStat { self: NirGenPhase =>
     private val buf          = mutable.UnrolledBuffer.empty[nir.Defn]
     def toSeq: Seq[nir.Defn] = buf
 
-    def getLoc(pos: Position): Location.Location =
-      Location.LocData(pos.source.file.file.toPath, pos.line)
-
-    def getLoc(tree: Tree): Location.Location =
-      getLoc(tree.pos)
-
+    def genDi(): Unit = {
+      buf += Defn.Meta(curDiMan.getMetas)
+    }
 
     def genClass(cd: ClassDef): Unit = {
       scoped(
@@ -79,6 +76,7 @@ trait NirGenStat { self: NirGenPhase =>
         else genNormalClass(cd)
       }
     }
+
 
     def genStruct(cd: ClassDef): Unit = {
       val sym    = cd.symbol
@@ -357,7 +355,8 @@ trait NirGenStat { self: NirGenPhase =>
                             bodyp: Tree,
                             isStatic: Boolean): Seq[nir.Inst] = {
       val fresh = curFresh.get
-      val buf   = new ExprBuffer()(fresh)
+      val diMan = curDiMan
+      val buf   = new ExprBuffer()(fresh, diMan)
 
       def genPrelude(): Unit = {
         val vars = curMethodInfo.mutableVars.toSeq

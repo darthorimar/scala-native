@@ -22,21 +22,47 @@ object Show {
   def apply(v: Global): String = {
     val b = newBuilder; b.global_(v); b.toString
   }
-  def apply(v: Inst): String  = { val b = newBuilder; b.inst_(v); b.toString }
-  def apply(v: Local): String = { val b = newBuilder; b.local_(v); b.toString }
-  def apply(v: Next): String  = { val b = newBuilder; b.next_(v); b.toString }
-  def apply(v: Op): String    = { val b = newBuilder; b.op_(v); b.toString }
-  def apply(v: Type): String  = { val b = newBuilder; b.type_(v); b.toString }
-  def apply(v: Val): String   = { val b = newBuilder; b.val_(v); b.toString }
+  def apply(v: Inst): String      = { val b = newBuilder; b.inst_(v); b.toString }
+  def apply(v: Local): String     = { val b = newBuilder; b.local_(v); b.toString }
+  def apply(v: DiLabel): String   = { val b = newBuilder; b.diLabel_(v); b.toString }
+  def apply(v: Next): String      = { val b = newBuilder; b.next_(v); b.toString }
+  def apply(v: Op): String        = { val b = newBuilder; b.op_(v); b.toString }
+  def apply(v: Type): String      = { val b = newBuilder; b.type_(v); b.toString }
+  def apply(v: Val): String       = { val b = newBuilder; b.val_(v); b.toString }
+  def apply(v: DebugInf): String  = { val b = newBuilder; b.di_(v); b.toString }
 
   final class NirShowBuilder(val builder: ShowBuilder) extends AnyVal {
+
     import builder._
 
-    def loc_(loc: Location.Location): Unit = loc match {
-      case Location.NoLoc =>
-        str(" (NoLoc) ")
-      case Location.LocData(file, line) =>
-        str(s" ($file:$line) ")
+    def di_(di: DebugInf): Unit = di match {
+      case DIFile(filename, directory) =>
+        str("DIFile(")
+        str(filename)
+        str(", ")
+        str(directory)
+        str(")")
+      case DILocation(line, column, scope) =>
+        str("DILocation(")
+        str(line)
+        str(":")
+        str(column)
+        str(", ")
+        di_(scope)
+        str(")")
+      case _: DIScope =>
+        str("NoScope")
+    }
+
+    def loc_(loc: Location.Location): Unit = {
+      str("loc(")
+      loc match {
+        case Location.NoLoc =>
+          str("!None")
+        case Location.LocLabel(label) =>
+          diLabel_(label)
+      }
+      str(") ")
     }
 
     def attrs_(attrs: Attrs): Unit =
@@ -548,6 +574,12 @@ object Show {
           str(" : ")
           rep(parents, sep = ", ")(global_)
         }
+      case Defn.Meta(metas) =>
+        rep(metas, "\n") { case (di, lbl) =>
+          diLabel_(lbl)
+          str(" = ")
+          di_(di)
+        }
     }
 
 
@@ -616,6 +648,11 @@ object Show {
     def local_(local: Local): Unit = {
       str("%")
       str(local.id)
+    }
+
+    def diLabel_(lbl: DiLabel): Unit = {
+      str("!")
+      str(lbl.id)
     }
 
     private def escapeNewLine(s: String): String =

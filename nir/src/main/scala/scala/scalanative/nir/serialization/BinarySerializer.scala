@@ -256,6 +256,13 @@ final class BinarySerializer(buffer: ByteBuffer) {
       putGlobalOpt(parent)
       putGlobals(ifaces)
       putLoc(loc)
+
+    case Defn.Meta(metas) =>
+      putInt(T.MetaDefn)
+      putSeq(metas) { case (di, lbl) =>
+        putDi(di)
+        putDiLabel(lbl)
+      }
   }
 
 
@@ -272,16 +279,34 @@ final class BinarySerializer(buffer: ByteBuffer) {
 
   private def putLoc(location: Location.Location): Unit = location match {
     case Location.NoLoc =>
-      putInt(T.NoLoc)
-    case Location.LocData(file, line)  =>
+      putInt(T.None)
+    case Location.LocLabel(lbl)  =>
       putInt(T.LocData)
-      putString(file.toString)
-      putInt(line)
+      putDiLabel(lbl)
   }
+
+  private def putDi(di: DebugInf): Unit = di match {
+    case DIFile(filename, directory) =>
+      putInt(T.DIFile)
+      putString(filename)
+      putString(directory)
+    case DILocation(line, column, scope) =>
+      putInt(T.DILocation)
+      putInt(line)
+      putInt(column)
+//      putDi(scope)
+//    case _: DIScope =>
+//      putInt(T.DISubprogram)
+  }
+
 
   private def putLocal(local: Local): Unit = {
     putString("") // scope
     putInt(local.id)
+  }
+
+  private def putDiLabel(lbl: DiLabel): Unit = {
+    putInt(lbl.id)
   }
 
   private def putNexts(nexts: Seq[Next]) = putSeq(nexts)(putNext)
