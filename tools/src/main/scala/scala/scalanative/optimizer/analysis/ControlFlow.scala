@@ -35,7 +35,7 @@ object ControlFlow {
 
     def pred  = inEdges.map(_.from)
     def succ  = outEdges.map(_.to)
-    def label = Inst.Label(name, params, Location.NoLoc) //todo: location?
+    def label = Inst.Label(name, params, Location.None) //todo: location?
     def show  = name.show
 
     def isRegular: Boolean =

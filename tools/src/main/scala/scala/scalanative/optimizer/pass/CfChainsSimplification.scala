@@ -146,7 +146,7 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
   /* To simplify a normal `if` branch, imagine it is a simple `jump`, and try to optimize
    * the latter. After that, keep the most optimized `jump` instruction, and get its next
    */
-  private def simplifyIfBranch(branch: Next, loc: Location.Location)(
+  private def simplifyIfBranch(branch: Next, loc: Location)(
       implicit method: MethodInfo): Next = {
     var newBranch       = branch
     var currentCf: Inst = Jump(branch, loc)
@@ -178,7 +178,7 @@ class CfChainsSimplification(implicit top: Top) extends Pass {
     swCase match {
       case Next.Case(value, name) => {
         var newLocalJump    = name
-        var currentCf: Inst = Jump(Next.Label(name, Seq.empty), Location.NoLoc) //todo: location?
+        var currentCf: Inst = Jump(Next.Label(name, Seq.empty), Location.None) //todo: location?
         var continue        = true
 
         while (continue) {

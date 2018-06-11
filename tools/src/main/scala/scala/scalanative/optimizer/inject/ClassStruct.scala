@@ -13,7 +13,7 @@ class ClassStruct(top: Top) extends Inject {
 
     top.classes.foreach { cls =>
       val struct = cls.layout.struct
-      val defn   = Defn.Struct(Attrs.None, struct.name, struct.tys, Location.NoLoc)//todo location?
+      val defn   = Defn.Struct(Attrs.None, struct.name, struct.tys, Location.None)//todo location?
       buf += defn
     }
   }

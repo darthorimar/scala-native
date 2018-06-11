@@ -46,7 +46,7 @@ object ReflectiveProxy {
       case _         => Type.Class(Global.Top("java.lang.Object"))
     })
 
-  private def genProxyLabel(args: Seq[Type], loc: Location.Location) = {
+  private def genProxyLabel(args: Seq[Type], loc: Location) = {
     val argLabels = Val.Local(fresh(), args.head) ::
       args.tail.map(argty => Val.Local(fresh(), argty)).toList
 
@@ -80,7 +80,7 @@ object ReflectiveProxy {
       method.loc)
   }
 
-  private def genRetValBox(callName: Local, defnRetTy: Type, proxyRetTy: Type, loc: Location.Location) =
+  private def genRetValBox(callName: Local, defnRetTy: Type, proxyRetTy: Type, loc: Location) =
     Type.box.get(defnRetTy) match {
       case Some(boxTy) =>
         Inst.Let(Op.Box(boxTy, Val.Local(callName, defnRetTy)), loc)
@@ -88,7 +88,7 @@ object ReflectiveProxy {
         Inst.Let(Op.Copy(Val.Local(callName, defnRetTy)), loc)
     }
 
-  private def genRet(retValBoxName: Local, proxyRetTy: Type, loc: Location.Location) =
+  private def genRet(retValBoxName: Local, proxyRetTy: Type, loc: Location) =
     proxyRetTy match {
       case Type.Unit => Inst.Ret(Val.Unit, loc)
       case _         => Inst.Ret(Val.Local(retValBoxName, proxyRetTy), loc)

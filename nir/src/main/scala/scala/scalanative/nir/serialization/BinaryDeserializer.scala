@@ -319,8 +319,8 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
   }
 
   private def getVals(): Seq[Val] = getSeq(getVal)
-  private def getLoc(): Location.Location = getInt match {
-    case T.None   => Location.NoLoc
+  private def getLoc(): Location = getInt match {
+    case T.None   => Location.None
     case T.LocData =>
       Location.LocLabel(getDiLabel)
   }

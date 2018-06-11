@@ -44,7 +44,7 @@ class IsLowering(implicit top: Top) extends Pass {
     buf.toSeq
   }
 
-  private def genIs(buf: Buffer, ty: Type, obj: Val, loc: Location.Location): Val = {
+  private def genIs(buf: Buffer, ty: Type, obj: Val, loc: Location): Val = {
     import buf._
 
     ty match {

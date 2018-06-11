@@ -95,7 +95,7 @@ object DynmethodLowering extends PassCompanion {
   val excInit = Val.Global(excptnInitGlobal, Type.Ptr)
 
   override val injects = Seq(
-    Defn.Declare(Attrs.None, dyndispatchName, dyndispatchSig, Location.NoLoc) //todo location?
+    Defn.Declare(Attrs.None, dyndispatchName, dyndispatchSig, Location.None) //todo location?
   )
 
   override def depends: Seq[Global] = Seq(excptnGlobal, excptnInitGlobal)

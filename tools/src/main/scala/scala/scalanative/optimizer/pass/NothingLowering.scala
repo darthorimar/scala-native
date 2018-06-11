@@ -49,7 +49,7 @@ object NothingLowering extends PassCompanion {
   val throw_    = Val.Global(throwName, Type.Ptr)
 
   override val injects =
-    Seq(Defn.Declare(Attrs.None, throwName, throwSig, Location.NoLoc)) //todo location?
+    Seq(Defn.Declare(Attrs.None, throwName, throwSig, Location.None)) //todo location?
 
   override def apply(config: build.Config, top: Top) =
     new NothingLowering

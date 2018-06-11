@@ -15,7 +15,7 @@ class RuntimeTypeInformation(implicit top: Top) extends Inject {
                         node.rtti.name,
                         node.rtti.struct,
                         node.rtti.value,
-                        Location.NoLoc) //todo location?
+                        Location.None) //todo location?
     }
     top.classes.foreach(inject)
     top.traits.foreach(inject)

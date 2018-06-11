@@ -1,8 +1,6 @@
 package scala.scalanative
 package nir
 
-import scala.scalanative.nir.Location.{Location, WithLocation}
-
 sealed abstract class Defn extends WithLocation {
   def name: Global
   def attrs: Attrs
@@ -45,6 +43,6 @@ object Defn {
   final case class Meta(metas: Seq[(DebugInf, DiLabel)]) extends Defn {
     override def name: Global  = Global.None
     override def attrs: Attrs  = Attrs.None
-    override def loc: Location = Location.NoLoc
+    override def loc: Location = Location.None
   }
 }

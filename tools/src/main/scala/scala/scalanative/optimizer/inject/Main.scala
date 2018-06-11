@@ -35,32 +35,32 @@ class Main(entry: Global) extends Inject {
       MainName,
       MainSig,
       Seq(
-        Inst.Label(fresh(), Seq(argc, argv), Location.NoLoc),
-        Inst.Let(stackBottom.name, Op.Stackalloc(Type.Ptr, Val.Long(0)), Location.NoLoc),
+        Inst.Label(fresh(), Seq(argc, argv), Location.None),
+        Inst.Let(stackBottom.name, Op.Stackalloc(Type.Ptr, Val.Long(0)), Location.None),
         Inst.Let(
           Op.Store(Type.Ptr,
                    Val.Global(stackBottomName, Type.Ptr),
                    stackBottom),
-                   Location.NoLoc),
-        Inst.Let(Op.Call(InitSig, Init, Seq(), unwind), Location.NoLoc),
-        Inst.Let(rt.name, Op.Module(Rt.name, unwind), Location.NoLoc),
+                   Location.None),
+        Inst.Let(Op.Call(InitSig, Init, Seq(), unwind), Location.None),
+        Inst.Let(rt.name, Op.Module(Rt.name, unwind), Location.None),
         Inst.Let(arr.name,
                  Op.Call(RtInitSig, RtInit, Seq(rt, argc, argv), unwind),
-                 Location.NoLoc),
-        Inst.Let(module.name, Op.Module(entry.top, unwind), Location.NoLoc),
-        Inst.Let(Op.Call(entryMainTy, entryMain, Seq(module, arr), unwind), Location.NoLoc),
-        Inst.Let(Op.Call(RtLoopSig, RtLoop, Seq(module), unwind), Location.NoLoc),
-        Inst.Ret(Val.Int(0), Location.NoLoc),
-        Inst.Label(unwind.name, Seq(exc), Location.NoLoc),
+                 Location.None),
+        Inst.Let(module.name, Op.Module(entry.top, unwind), Location.None),
+        Inst.Let(Op.Call(entryMainTy, entryMain, Seq(module, arr), unwind), Location.None),
+        Inst.Let(Op.Call(RtLoopSig, RtLoop, Seq(module), unwind), Location.None),
+        Inst.Ret(Val.Int(0), Location.None),
+        Inst.Label(unwind.name, Seq(exc), Location.None),
         Inst.Let(
           Op.Call(PrintStackTraceSig, PrintStackTrace, Seq(exc), Next.None),
-          Location.NoLoc),
-        Inst.Ret(Val.Int(1), Location.NoLoc)
+          Location.None),
+        Inst.Ret(Val.Int(1), Location.None)
       ),
-      Location.NoLoc //todo location?
+      Location.None //todo location?
     )
 
-    buf += Defn.Var(Attrs.None, stackBottomName, Type.Ptr, Val.Null, Location.NoLoc) //todo location?
+    buf += Defn.Var(Attrs.None, stackBottomName, Type.Ptr, Val.Null, Location.None) //todo location?
   }
 }
 
@@ -97,7 +97,7 @@ object Main extends InjectCompanion {
 
   val InitSig  = Type.Function(Seq(), Type.Unit)
   val Init     = Val.Global(Global.Top("scalanative_init"), Type.Ptr)
-  val InitDecl = Defn.Declare(Attrs.None, Init.name, InitSig, Location.NoLoc)//todo location?
+  val InitDecl = Defn.Declare(Attrs.None, Init.name, InitSig, Location.None)//todo location?
 
   val stackBottomName = Global.Top("__stack_bottom")
 

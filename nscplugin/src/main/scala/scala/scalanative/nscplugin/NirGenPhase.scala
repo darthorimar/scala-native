@@ -37,7 +37,7 @@ abstract class NirGenPhase
   protected val curFresh      = new util.ScopedVar[nir.Fresh]
   protected val curUnwind     = new util.ScopedVar[nir.Next]
   protected val curStatBuffer = new util.ScopedVar[StatBuffer]
-  protected val curDiMan      = new nir.DiMan
+  protected val curDiMan      = new util.ScopedVar[nir.DiMan]
 
   protected def lazyAnonDefs =
     curLazyAnonDefs.get
@@ -88,7 +88,8 @@ abstract class NirGenPhase
         val buffer = new StatBuffer
 
         scoped(
-          curStatBuffer := buffer
+          curStatBuffer := buffer,
+          curDiMan      := new DiMan
         ) {
           buffer.genClass(cd)
           buffer.genDi()

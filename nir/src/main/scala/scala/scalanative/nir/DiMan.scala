@@ -14,7 +14,6 @@ class DiMan {
       label
     })
 
-
   def getMetas: Seq[(DebugInf, DiLabel)] =
     metas.toSeq
 }

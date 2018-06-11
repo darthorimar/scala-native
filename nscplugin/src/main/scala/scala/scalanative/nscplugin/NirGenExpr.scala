@@ -319,7 +319,7 @@ trait NirGenExpr { self: NirGenPhase =>
                     exc: Val,
                     mergen: Local,
                     catches: List[Tree],
-                    loc: Location.Location): Val = {
+                    loc: Location): Val = {
       val cases = catches.map {
         case c @ CaseDef(pat, _, body) =>
           val (excty, symopt) = pat match {
@@ -594,7 +594,7 @@ trait NirGenExpr { self: NirGenPhase =>
       }
     }
 
-    def genApplyDynamic(sym: Symbol, self: Val, argsp: Seq[Tree], loc: Location.Location): Val = {
+    def genApplyDynamic(sym: Symbol, self: Val, argsp: Seq[Tree], loc: Location): Val = {
       val methodSig = genMethodSig(sym).asInstanceOf[Type.Function]
       val params    = sym.tpe.params
 
@@ -765,7 +765,7 @@ trait NirGenExpr { self: NirGenPhase =>
       nir.Type.Function(Seq(jlClass, Type.Ptr), nir.Type.Unit)
     lazy val jlClassCtor = nir.Val.Global(jlClassCtorName, nir.Type.Ptr)
 
-    def genBoxClass(typeVal: Val, loc: Location.Location): Val = {
+    def genBoxClass(typeVal: Val, loc: Location): Val = {
       val alloc = buf.classalloc(jlClassName, loc)
       buf.call(jlClassCtorSig, jlClassCtor, Seq(alloc, typeVal), curUnwind, loc)
       alloc
@@ -791,13 +791,13 @@ trait NirGenExpr { self: NirGenPhase =>
       }
     }
 
-    def negateInt(value: nir.Val, loc: Location.Location): Val =
+    def negateInt(value: nir.Val, loc: Location): Val =
       buf.bin(Bin.Isub, value.ty, numOfType(0, value.ty), value, loc)
-    def negateFloat(value: nir.Val, loc: Location.Location): Val =
+    def negateFloat(value: nir.Val, loc: Location): Val =
       buf.bin(Bin.Fsub, value.ty, numOfType(0, value.ty), value, loc)
-    def negateBits(value: nir.Val, loc: Location.Location): Val =
+    def negateBits(value: nir.Val, loc: Location): Val =
       buf.bin(Bin.Xor, value.ty, numOfType(-1, value.ty), value, loc)
-    def negateBool(value: nir.Val, loc: Location.Location): Val =
+    def negateBool(value: nir.Val, loc: Location): Val =
       buf.bin(Bin.Xor, Type.Bool, Val.True, value, loc)
 
     def genUnaryOp(code: Int, rightp: Tree, opty: nir.Type): Val = {
@@ -1374,7 +1374,7 @@ trait NirGenExpr { self: NirGenPhase =>
       genCoercion(rec, fromty, toty, getLoc(app))
     }
 
-    def genCoercion(value: Val, fromty: nir.Type, toty: nir.Type, loc: Location.Location): Val = {
+    def genCoercion(value: Val, fromty: nir.Type, toty: nir.Type, loc: Location): Val = {
       if (fromty == toty) {
         value
       } else {
@@ -1565,7 +1565,7 @@ trait NirGenExpr { self: NirGenPhase =>
       }
     }
 
-    def genApplyExternAccessor(sym: Symbol, argsp: Seq[Tree], loc: Location.Location): Val = {
+    def genApplyExternAccessor(sym: Symbol, argsp: Seq[Tree], loc: Location): Val = {
       argsp match {
         case Seq() =>
           val ty   = genMethodSig(sym).ret

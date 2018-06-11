@@ -277,8 +277,8 @@ final class BinarySerializer(buffer: ByteBuffer) {
       putInt(T.MemberGlobal); putGlobal(n); putString(id)
   }
 
-  private def putLoc(location: Location.Location): Unit = location match {
-    case Location.NoLoc =>
+  private def putLoc(location: Location): Unit = location match {
+    case Location.None =>
       putInt(T.None)
     case Location.LocLabel(lbl)  =>
       putInt(T.LocData)

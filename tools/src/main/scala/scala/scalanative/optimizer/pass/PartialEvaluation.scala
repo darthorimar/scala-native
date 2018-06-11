@@ -223,10 +223,10 @@ class PartialEvaluation extends Pass {
       inst
   }
 
-  private def copy(n: Local, value: Val, loc: Location.Location): Inst =
+  private def copy(n: Local, value: Val, loc: Location): Inst =
     Let(n, Op.Copy(value), loc)
 
-  private def neg(n: Local, value: Val, loc: Location.Location): Inst =
+  private def neg(n: Local, value: Val, loc: Location): Inst =
     Let(n, Op.Bin(Xor, Type.Bool, value, Val.True), loc)
 }
 

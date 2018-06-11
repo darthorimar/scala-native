@@ -54,10 +54,10 @@ object Show {
         str("NoScope")
     }
 
-    def loc_(loc: Location.Location): Unit = {
+    def loc_(loc: Location): Unit = {
       str("loc(")
       loc match {
-        case Location.NoLoc =>
+        case Location.None =>
           str("!None")
         case Location.LocLabel(label) =>
           diLabel_(label)

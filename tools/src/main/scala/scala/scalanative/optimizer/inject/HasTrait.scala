@@ -24,16 +24,16 @@ class HasTrait(implicit top: Top) extends Inject {
       ClassHasTraitName,
       ClassHasTraitSig,
       Seq(
-        Inst.Label(fresh(), Seq(classid, traitid), Location.NoLoc),
+        Inst.Label(fresh(), Seq(classid, traitid), Location.None),
         Inst.Let(boolptr.name,
                  Op.Elem(tables.classHasTraitTy,
                          tables.classHasTraitVal,
                          Seq(Val.Int(0), classid, traitid)),
-                 Location.NoLoc),
-        Inst.Let(result.name, Op.Load(Type.Bool, boolptr), Location.NoLoc),
-        Inst.Ret(result, Location.NoLoc)
+                 Location.None),
+        Inst.Let(result.name, Op.Load(Type.Bool, boolptr), Location.None),
+        Inst.Ret(result, Location.None)
       ),
-      Location.NoLoc //todo location?
+      Location.None //todo location?
     )
   }
 
@@ -42,7 +42,7 @@ class HasTrait(implicit top: Top) extends Inject {
     val leftid, rightid = Val.Local(fresh(), Type.Int)
     val boolptr         = Val.Local(fresh(), Type.Ptr)
     val result          = Val.Local(fresh(), Type.Bool)
-    val loc = Location.NoLoc //todo location?
+    val loc = Location.None //todo location?
     Defn.Define(
       Attrs(isExtern = true, inline = Attr.AlwaysInline),
       TraitHasTraitName,

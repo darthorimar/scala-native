@@ -15,7 +15,7 @@ class ObjectArrayId(top: Top) extends Inject {
                     ObjectArrayId.objectArrayIdName,
                     Type.Int,
                     Val.Int(objectArray.id),
-                    Location.NoLoc)//todo location?
+                    Location.None)//todo location?
   }
 }
 

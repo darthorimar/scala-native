@@ -65,7 +65,7 @@ trait NirGenStat { self: NirGenPhase =>
     def toSeq: Seq[nir.Defn] = buf
 
     def genDi(): Unit = {
-      buf += Defn.Meta(curDiMan.getMetas)
+      buf += Defn.Meta(curDiMan.get.getMetas)
     }
 
     def genClass(cd: ClassDef): Unit = {
@@ -230,7 +230,7 @@ trait NirGenStat { self: NirGenPhase =>
                         sig: nir.Type,
                         params: Seq[nir.Val.Local],
                         rhs: Tree,
-                        loc: Location.Location): Unit = {
+                        loc: Location): Unit = {
       rhs match {
         case Apply(ref: RefTree, Seq()) if ref.symbol == ExternMethod =>
           val moduleName  = genTypeName(curClassSym)
@@ -355,7 +355,7 @@ trait NirGenStat { self: NirGenPhase =>
                             bodyp: Tree,
                             isStatic: Boolean): Seq[nir.Inst] = {
       val fresh = curFresh.get
-      val diMan = curDiMan
+      val diMan = curDiMan.get
       val buf   = new ExprBuffer()(fresh, diMan)
 
       def genPrelude(): Unit = {

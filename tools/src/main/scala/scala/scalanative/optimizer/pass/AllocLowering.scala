@@ -55,8 +55,8 @@ object AllocLowering extends PassCompanion {
   val largeAlloc     = Val.Global(largeAllocName, allocSig)
 
   override val injects =
-    Seq(Defn.Declare(Attrs.None, allocSmallName, allocSig, Location.NoLoc),//todo: location?)
-        Defn.Declare(Attrs.None, largeAllocName, allocSig, Location.NoLoc))//todo: location?)
+    Seq(Defn.Declare(Attrs.None, allocSmallName, allocSig, Location.None),//todo: location?)
+        Defn.Declare(Attrs.None, largeAllocName, allocSig, Location.None))//todo: location?)
 
   override def apply(config: build.Config, top: Top) =
     new AllocLowering()(top)
