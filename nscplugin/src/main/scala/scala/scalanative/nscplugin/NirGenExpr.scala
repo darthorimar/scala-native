@@ -1611,7 +1611,7 @@ trait NirGenExpr { self: NirGenPhase =>
 
     def genSimpleArgsWithPt(
         argsp: Seq[Tree],
-        pts: Seq[Option[scalanative.nir.Type]]): Seq[Val] = {
+        pts: Seq[Option[scala.scalanative.nir.Type]]): Seq[Val] = {
       val res = mutable.UnrolledBuffer.empty[Val]
 
       argsp.zip(pts).foreach {

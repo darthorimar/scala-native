@@ -83,13 +83,18 @@ abstract class NirGenPhase
           }
       }
 
+      def genDIFile(path: Path) =
+       DebugInf.DIFile(path.getFileName.toString, path.getParent.toString)
+
+
+
       def genClass(cd: ClassDef): Unit = {
         val path   = genPathFor(cunit, cd.symbol)
         val buffer = new StatBuffer
-
+        val diMan  = new DiMan(genDIFile(path))
         scoped(
           curStatBuffer := buffer,
-          curDiMan      := new DiMan
+          curDiMan      := diMan
         ) {
           buffer.genClass(cd)
           buffer.genDi()

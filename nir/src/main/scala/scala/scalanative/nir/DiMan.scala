@@ -1,11 +1,15 @@
 package scala.scalanative.nir
 
 import scala.collection.mutable
+import scala.scalanative.nir.DebugInf.{DIFile, DILocation, None}
 
 
-class DiMan {
+class DiMan(diFile: DebugInf.DIFile) {
   private val metas = mutable.HashMap.empty[DebugInf, DiLabel]
-  private var id: Int = 1
+  private var id: Int = 2
+
+  val diFileLabel = DiLabel(1)
+  metas(diFile) = diFileLabel //todo move it out
 
   def genDiLabel(di: DebugInf): DiLabel =
     metas.getOrElseUpdate(di, {

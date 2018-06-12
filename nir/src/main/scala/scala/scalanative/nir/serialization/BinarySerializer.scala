@@ -286,17 +286,17 @@ final class BinarySerializer(buffer: ByteBuffer) {
   }
 
   private def putDi(di: DebugInf): Unit = di match {
-    case DIFile(filename, directory) =>
+    case DebugInf.DIFile(filename, directory) =>
       putInt(T.DIFile)
       putString(filename)
       putString(directory)
-    case DILocation(line, column, scope) =>
+    case DebugInf.DILocation(line, column, scopeLbl) =>
       putInt(T.DILocation)
       putInt(line)
       putInt(column)
-//      putDi(scope)
-//    case _: DIScope =>
-//      putInt(T.DISubprogram)
+      putDiLabel(scopeLbl)
+    case DebugInf.None =>
+      putInt(T.DINone)
   }
 
 

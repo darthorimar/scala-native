@@ -236,17 +236,12 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
 
   private def getDi(): DebugInf = getInt match {
     case T.DIFile =>
-      DIFile(getString, getString)
+      DebugInf.DIFile(getString, getString)
     case T.DILocation =>
-      DILocation(getInt, getInt, DISubprogram())
-//    case T.DISubprogram =>
-//      DISubprogram()
+      DebugInf.DILocation(getInt, getInt, getDiLabel)
+    case T.DINone =>
+      DebugInf.None
   }
-
-//  private def getDiScope(): DIScope = getInt match {
-//    case T.DISubprogram =>
-//      DISubprogram()
-//  }
 
   private def getNexts(): Seq[Next] = getSeq(getNext)
   private def getNext(): Next = getInt match {

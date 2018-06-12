@@ -3,7 +3,7 @@ package nscplugin
 
 import scala.scalanative.util.unsupported
 
-import scala.scalanative.nir.{DILocation, DebugInf, Location}
+import scala.scalanative.nir.{DebugInf, Location}
 
 trait NirGenUtil { self: NirGenPhase =>
   import global._
@@ -13,7 +13,7 @@ trait NirGenUtil { self: NirGenPhase =>
   import SimpleType.fromSymbol
 
   def getLoc(pos: Position): Location = {
-    val dILoc = DILocation(pos.line, pos.column, DebugInf.defaultScope)
+    val dILoc = DebugInf.DILocation(pos.line, pos.column, curDiMan.diFileLabel)
     val label = curDiMan.genDiLabel(dILoc)
     Location.LocLabel(label)
   }

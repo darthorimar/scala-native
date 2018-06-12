@@ -36,22 +36,20 @@ object Show {
     import builder._
 
     def di_(di: DebugInf): Unit = di match {
-      case DIFile(filename, directory) =>
+      case DebugInf.DIFile(filename, directory) =>
         str("DIFile(")
         str(filename)
         str(", ")
         str(directory)
         str(")")
-      case DILocation(line, column, scope) =>
+      case DebugInf.DILocation(line, column, scopeLbl) =>
         str("DILocation(")
         str(line)
         str(":")
         str(column)
         str(", ")
-        di_(scope)
+        diLabel_(scopeLbl)
         str(")")
-      case _: DIScope =>
-        str("NoScope")
     }
 
     def loc_(loc: Location): Unit = {
