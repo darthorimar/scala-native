@@ -44,7 +44,8 @@ object Linker {
       def load(global: Global) =
         classpath.collectFirst {
           case path if path.contains(global) =>
-            path.load(global)
+            path.
+              load(global)
         }.flatten
 
       def processDirect =

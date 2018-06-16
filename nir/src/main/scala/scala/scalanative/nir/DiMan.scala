@@ -1,7 +1,6 @@
 package scala.scalanative.nir
 
 import scala.collection.mutable
-import scala.scalanative.nir.DebugInf.{DIFile, DILocation, None}
 
 
 class DiMan(diFile: DebugInf.DIFile) {

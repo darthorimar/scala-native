@@ -227,5 +227,5 @@ object Tags {
 
   final val DIFile       = 1 + DebugInfo
   final val DILocation   = 1 + DIFile
-  final val DINone       = 1 + DILocation
+  final val DISubprogram = 1 + DILocation
 }

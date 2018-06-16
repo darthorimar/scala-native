@@ -258,6 +258,7 @@ final class BinarySerializer(buffer: ByteBuffer) {
       putLoc(loc)
 
     case Defn.Meta(metas) =>
+      println(Console.RED + "Serialize META" + Console.RESET)
       putInt(T.MetaDefn)
       putSeq(metas) { case (di, lbl) =>
         putDi(di)
@@ -295,8 +296,11 @@ final class BinarySerializer(buffer: ByteBuffer) {
       putInt(line)
       putInt(column)
       putDiLabel(scopeLbl)
-    case DebugInf.None =>
-      putInt(T.DINone)
+    case DebugInf.DISubprogram(name, file, scope) =>
+      putInt(T.DISubprogram)
+      putString(name)
+      putDiLabel(file)
+      putDiLabel(scope)
   }
 
 

@@ -4,12 +4,15 @@ package codegen
 import java.{lang => jl}
 import java.nio.ByteBuffer
 import java.nio.file.Paths
+
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.scalanative.util.{Scope, ShowBuilder, unsupported}
 import scala.scalanative.io.{VirtualDirectory, withScratchBuffer}
-import scala.scalanative.optimizer.analysis.ControlFlow.{Graph => CFG, Block, Edge}
-import scala.scalanative.nir._
+import scala.scalanative.nir.DebugInf.{DIFile, DILocation}
+import scala.scalanative.nir.Location.LocLabel
+import scala.scalanative.optimizer.analysis.ControlFlow.{Block, Edge, Graph => CFG}
+import scala.scalanative.nir.{DebugInf, Location, _}
 
 object CodeGen {
 
@@ -154,6 +157,12 @@ object CodeGen {
       defns.foreach { defn =>
         if (defn.isInstanceOf[Defn.Define]) onDefn(defn)
       }
+      defns.foreach { defn =>
+        if (defn.isInstanceOf[Defn.Meta]) {
+          println(Console.BLUE + "NYA" + Console.RESET)
+          onDefn(defn)
+        }
+      }
     }
 
     def genPrelude(): Unit = {
@@ -193,6 +202,8 @@ object CodeGen {
         genFunctionDefn(attrs, name, sig, Seq(), Fresh())
       case Defn.Define(attrs, name, sig, insts, loc) =>
         genFunctionDefn(attrs, name, sig, insts, Fresh(insts))
+      case Defn.Meta(metas) =>
+        genMetas(metas)
       case defn =>
         unsupported(defn)
     }
@@ -265,6 +276,32 @@ object CodeGen {
         }
         newline()
         str("}")
+      }
+    }
+
+    def genDi(di: DebugInf): Unit = di match {
+      case DILocation(line, column, scopeLbl) =>
+        str("!DILocation(line: ")
+        str(line)
+        str(", column:")
+        str(column)
+        str(", scope: ")
+        genDiLabel(scopeLbl)
+        str(")")
+      case DIFile(filename, directory) =>
+        str("!DIFile(filename:\"")
+        str(filename)
+        str("\", directory: \"")
+        str(directory)
+        str("\")")
+    }
+
+    def genMetas(metas: Seq[(DebugInf, DiLabel)]): Unit = {
+      println(Console.RED + "Gen Metas" + Console.RESET)
+      rep(metas, "\n") { case (di, lbl) =>
+        genDiLabel(lbl)
+        str(" = ")
+        genDi(di)
       }
     }
 
@@ -534,9 +571,21 @@ object CodeGen {
         str(id)
     }
 
+    def genDiLabel(lbl: DiLabel): Unit = {
+      str("!")
+      str(lbl.id)
+    }
+
+    def genLoc(loc: Location): Unit = loc match {
+      case Location.None =>
+      case LocLabel(lbl) =>
+        genDbg(lbl)
+    }
+
     def genInst(inst: Inst)(implicit fresh: Fresh): Unit = inst match {
       case inst: Inst.Let =>
         genLet(inst)
+        genLoc(inst.loc)
 
       case Inst.Unreachable(_) =>
         newline()
@@ -545,16 +594,19 @@ object CodeGen {
       case Inst.Ret(Val.None, loc) =>
         newline()
         str("ret void")
+        genLoc(loc)
 
       case Inst.Ret(value, loc) =>
         newline()
         str("ret ")
         genVal(value)
+        genLoc(loc)
 
       case Inst.Jump(next, loc) =>
         newline()
         str("br ")
         genNext(next)
+        genLoc(loc)
 
       case Inst.If(cond, thenp, elsep, loc) =>
         newline()
@@ -564,6 +616,7 @@ object CodeGen {
         genNext(thenp)
         str(", ")
         genNext(elsep)
+        genLoc(loc)
 
       case Inst.Switch(scrut, default, cases, loc) =>
         newline()
@@ -580,6 +633,7 @@ object CodeGen {
         unindent()
         newline()
         str("]")
+        genLoc(loc)
 
       case Inst.None =>
         ()
@@ -846,6 +900,11 @@ object CodeGen {
         genVal(v2)
       case op =>
         unsupported(op)
+    }
+
+    def genDbg(lbl: DiLabel): Unit = {
+      str(", !dbg ")
+      genDiLabel(lbl)
     }
 
     def genNext(next: Next) = next match {

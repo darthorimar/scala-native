@@ -29,15 +29,16 @@ abstract class NirGenPhase
 
   protected val curLazyAnonDefs =
     new util.ScopedVar[mutable.Map[Symbol, ClassDef]]
-  protected val curClassSym   = new util.ScopedVar[Symbol]
-  protected val curMethodSym  = new util.ScopedVar[Symbol]
-  protected val curMethodInfo = new util.ScopedVar[CollectMethodInfo]
-  protected val curMethodEnv  = new util.ScopedVar[MethodEnv]
-  protected val curMethodThis = new util.ScopedVar[Option[Val]]
-  protected val curFresh      = new util.ScopedVar[nir.Fresh]
-  protected val curUnwind     = new util.ScopedVar[nir.Next]
-  protected val curStatBuffer = new util.ScopedVar[StatBuffer]
-  protected val curDiMan      = new util.ScopedVar[nir.DiMan]
+  protected val curClassSym     = new util.ScopedVar[Symbol]
+  protected val curMethodSym    = new util.ScopedVar[Symbol]
+  protected val curMethodInfo   = new util.ScopedVar[CollectMethodInfo]
+  protected val curMethodEnv    = new util.ScopedVar[MethodEnv]
+  protected val curMethodThis   = new util.ScopedVar[Option[Val]]
+  protected val curMethodDebLbl = new util.ScopedVar[DiLabel]
+  protected val curFresh        = new util.ScopedVar[nir.Fresh]
+  protected val curUnwind       = new util.ScopedVar[nir.Next]
+  protected val curStatBuffer   = new util.ScopedVar[StatBuffer]
+  protected val curDiMan        = new util.ScopedVar[nir.DiMan]
 
   protected def lazyAnonDefs =
     curLazyAnonDefs.get
@@ -86,15 +87,14 @@ abstract class NirGenPhase
       def genDIFile(path: Path) =
        DebugInf.DIFile(path.getFileName.toString, path.getParent.toString)
 
-
-
       def genClass(cd: ClassDef): Unit = {
         val path   = genPathFor(cunit, cd.symbol)
         val buffer = new StatBuffer
         val diMan  = new DiMan(genDIFile(path))
         scoped(
           curStatBuffer := buffer,
-          curDiMan      := diMan
+          curDiMan      := diMan,
+          curMethodDebLbl := diMan.diFileLabel
         ) {
           buffer.genClass(cd)
           buffer.genDi()

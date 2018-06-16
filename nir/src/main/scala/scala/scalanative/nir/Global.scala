@@ -49,6 +49,8 @@ object Global {
     override def top: Global.Top = owner.top
   }
 
+  final val Meta = Top("Meta")
+
   def genSignature(methodName: nir.Global, proxy: Boolean = false): String = {
     val fullSignature = methodName.id
     val index         = fullSignature.lastIndexOf("_")

@@ -12,16 +12,14 @@ trait NirGenUtil { self: NirGenPhase =>
   import nirDefinitions._
   import SimpleType.fromSymbol
 
-  def getLoc(pos: Position): Location = {
-    val dILoc = DebugInf.DILocation(pos.line, pos.column, curDiMan.diFileLabel)
+  def genLoc(pos: Position): Location = {
+    val dILoc = DebugInf.DILocation(pos.line, pos.column, curMethodDebLbl)
     val label = curDiMan.genDiLabel(dILoc)
     Location.LocLabel(label)
   }
 
-
-  def getLoc(tree: Tree): Location =
-    getLoc(tree.pos)
-
+  def genLoc(tree: Tree): Location =
+    genLoc(tree.pos)
 
   def genParamSyms(dd: DefDef, isStatic: Boolean): Seq[Option[Symbol]] = {
     val vp     = dd.vparamss

@@ -50,6 +50,14 @@ object Show {
         str(", ")
         diLabel_(scopeLbl)
         str(")")
+      case DebugInf.DISubprogram(name, file, scope) =>
+        str("DISubprogram(")
+        str(name)
+        str(":, ")
+        diLabel_(file)
+        str(", ")
+        diLabel_(scope)
+        str(")")
     }
 
     def loc_(loc: Location): Unit = {
