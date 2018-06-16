@@ -39,6 +39,7 @@ abstract class NirGenPhase
   protected val curUnwind       = new util.ScopedVar[nir.Next]
   protected val curStatBuffer   = new util.ScopedVar[StatBuffer]
   protected val curDiMan        = new util.ScopedVar[nir.DiMan]
+  protected val curFile         = new util.ScopedVar[nir.DiLabel]
 
   protected def lazyAnonDefs =
     curLazyAnonDefs.get
@@ -90,11 +91,14 @@ abstract class NirGenPhase
       def genClass(cd: ClassDef): Unit = {
         val path   = genPathFor(cunit, cd.symbol)
         val buffer = new StatBuffer
-        val diMan  = new DiMan(genDIFile(path))
+        val diMan  = new DiMan
+        val file   = diMan.genDiLabel(genDIFile(cd.pos.source.file.file.toPath))
+
         scoped(
           curStatBuffer := buffer,
           curDiMan      := diMan,
-          curMethodDebLbl := diMan.diFileLabel
+          curMethodDebLbl := file,
+          curFile := file
         ) {
           buffer.genClass(cd)
           buffer.genDi()

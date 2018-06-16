@@ -184,8 +184,8 @@ trait NirGenStat { self: NirGenPhase =>
 
     def genDISubprogram(dd: DefDef) = {
       val name  = dd.name.toString
-      val scope = curDiMan.diFileLabel
-      val file  = curDiMan.diFileLabel
+      val scope = curMethodDebLbl.get
+      val file  = curFile.get
       DebugInf.DISubprogram(name, file, scope)
     }
 
