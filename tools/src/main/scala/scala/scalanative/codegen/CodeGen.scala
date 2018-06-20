@@ -80,7 +80,7 @@ object CodeGen {
     import builder._
 
     val labelIndecies: mutable.Map[DiLabel, Int] = mutable.Map.empty
-    var labelId = 0
+    var labelId = 3
 
     def genDiLabelIndex(label: DiLabel): Int =
       labelIndecies.getOrElseUpdate(label, {
@@ -167,6 +167,8 @@ object CodeGen {
         if (defn.isInstanceOf[Defn.Define]) onDefn(defn)
       }
 
+      genDiHeaders()
+
       val ms = defns.collect {
           case Defn.Meta(_, metas)=> metas
         }
@@ -174,6 +176,15 @@ object CodeGen {
         .distinct
         .sortBy(_._2.id)
       genMetas(ms)
+    }
+
+    def genDiHeaders(): Unit = {
+      newline()
+      str("!llvm.module.flags = !{!1, !2, !3}")
+      str("!1 = !{i32 2, !\"Dwarf Version\", i32 2}")
+      str("!2 = !{i32 2, !\"Debug Info Version\", i32 3}")
+      str("!3 = !{i32 1, !\"PIC Level\", i32 2}")
+      newline()
     }
 
     def genPrelude(): Unit = {
@@ -213,8 +224,6 @@ object CodeGen {
         genFunctionDefn(attrs, name, sig, Seq(), Fresh())
       case Defn.Define(attrs, name, sig, insts, loc) =>
         genFunctionDefn(attrs, name, sig, insts, Fresh(insts))
-//      case Defn.Meta(name, metas) =>
-//        genMetas(metas)
       case defn =>
         unsupported(defn)
     }

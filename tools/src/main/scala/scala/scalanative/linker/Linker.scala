@@ -61,9 +61,7 @@ object Linker {
                 // If this definition is a stub, and linking stubs is disabled,
                 // then add this element to the `unresolved` items.
                 case (_, _, _, defn)
-                    if defn.attrs.isStub &&
-                      !config.linkStubs  &&
-                      !defn.isInstanceOf[Defn.Meta] =>
+                    if defn.attrs.isStub && !config.linkStubs =>
                   unresolved += workitem
                   onUnresolved(workitem)
 
