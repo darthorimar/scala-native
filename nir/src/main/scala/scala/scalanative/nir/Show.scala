@@ -658,6 +658,8 @@ object Show {
 
     def diLabel_(lbl: DiLabel): Unit = {
       str("!")
+      str(lbl.scope)
+      str("!")
       str(lbl.id)
     }
 

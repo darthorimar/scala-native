@@ -91,14 +91,14 @@ abstract class NirGenPhase
       def genClass(cd: ClassDef): Unit = {
         val path   = genPathFor(cunit, cd.symbol)
         val buffer = new StatBuffer
-        val diMan  = new DiMan
+        val diMan = new DiMan(genTypeName(cd.symbol).id)
         val file   = diMan.genDiLabel(genDIFile(cd.pos.source.file.file.toPath))
 
         scoped(
           curStatBuffer := buffer,
-          curDiMan      := diMan,
           curMethodDebLbl := file,
-          curFile := file
+          curFile := file,
+          curDiMan := diMan
         ) {
           buffer.genClass(cd)
           buffer.genDi(buffer.genDiName(cd.symbol))

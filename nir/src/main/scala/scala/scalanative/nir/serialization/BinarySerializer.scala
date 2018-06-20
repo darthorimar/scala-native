@@ -310,6 +310,7 @@ final class BinarySerializer(buffer: ByteBuffer) {
   }
 
   private def putDiLabel(lbl: DiLabel): Unit = {
+    putString(lbl.scope)
     putInt(lbl.id)
   }
 

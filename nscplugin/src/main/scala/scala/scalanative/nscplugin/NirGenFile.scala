@@ -36,8 +36,7 @@ trait NirGenFile { self: NirGenPhase =>
 
 
     if (path.toString.toLowerCase.contains("test")) {
-      println(Console.BLUE + "Hi :)" + Console.RESET)
-      val textPath = Paths.get(path.toString + "nirt")
+      val textPath = Paths.get(path.toString + "t")
       withScratchBuffer { buffer =>
         serializeText(defns, buffer)
         buffer.flip

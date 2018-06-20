@@ -38,10 +38,9 @@ object Linker {
       val signatures  = mutable.Set.empty[String]
       val dyndefns    = mutable.Set.empty[Global]
 
-      println(Console.GREEN +  "CONFIG IS" + Console.RESET)
       val classpath = config.classPath.map { p =>
         ClassPath(VirtualDirectory.real(p))
-      }.map { x => println(Console.MAGENTA +  "    " + x.entries.keys.map(_.id).mkString("\n         ") + Console.RESET); x }
+      }
       def load(global: Global) =
         classpath.collectFirst {
           case path if path.contains(global) =>
@@ -54,14 +53,10 @@ object Linker {
           val workitem = direct.pop()
           if (!workitem.isIntrinsic && !resolved.contains(workitem) &&
               !unresolved.contains(workitem)) {
-//            if (workitem.id.toLowerCase.contains("meta"))
-//              println(Console.CYAN + workitem.id + Console.RESET)
-
             load(workitem)
               .fold[Unit] {
                 unresolved += workitem
                 onUnresolved(workitem)
-//                println(Console.RED + "UNRESOLVED " + workitem.id + Console.RESET)
               } {
                 // If this definition is a stub, and linking stubs is disabled,
                 // then add this element to the `unresolved` items.
@@ -91,14 +86,10 @@ object Linker {
                     }
 
                   onResolved(workitem)
-                  if (defn.name.id.toLowerCase.contains("test"))
-                    println(Console.RED + defn.name + Console.RESET)
 
                   deps.foreach {
                     case Dep.Direct(dep) =>
                       direct.push(dep)
-                      if (defn.name.id.toLowerCase.contains("test"))
-                        println("   " + Console.GREEN + dep.show + Console.RESET)
                       onDirectDependency(workitem, dep)
 
                     case cond @ Dep.Conditional(dep, condition) =>

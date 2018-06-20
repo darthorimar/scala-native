@@ -79,6 +79,15 @@ object CodeGen {
     val builder   = new ShowBuilder
     import builder._
 
+    val labelIndecies: mutable.Map[DiLabel, Int] = mutable.Map.empty
+    var labelId = 0
+
+    def genDiLabelIndex(label: DiLabel): Int =
+      labelIndecies.getOrElseUpdate(label, {
+        labelId += 1
+        labelId
+      })
+
     def gen(): ByteBuffer = {
       genDefns(defns)
       val body = builder.toString.getBytes("UTF-8")
@@ -157,12 +166,14 @@ object CodeGen {
       defns.foreach { defn =>
         if (defn.isInstanceOf[Defn.Define]) onDefn(defn)
       }
-      defns.foreach { defn =>
-        if (defn.isInstanceOf[Defn.Meta]) {
-          println(Console.BLUE + defn.name.id + Console.RESET)
-          onDefn(defn)
+
+      val ms = defns.collect {
+          case Defn.Meta(_, metas)=> metas
         }
-      }
+        .flatten
+        .distinct
+        .sortBy(_._2.id)
+      genMetas(ms)
     }
 
     def genPrelude(): Unit = {
@@ -202,8 +213,8 @@ object CodeGen {
         genFunctionDefn(attrs, name, sig, Seq(), Fresh())
       case Defn.Define(attrs, name, sig, insts, loc) =>
         genFunctionDefn(attrs, name, sig, insts, Fresh(insts))
-      case Defn.Meta(name, metas) =>
-        genMetas(metas)
+//      case Defn.Meta(name, metas) =>
+//        genMetas(metas)
       case defn =>
         unsupported(defn)
     }
@@ -305,7 +316,6 @@ object CodeGen {
     }
 
     def genMetas(metas: Seq[(DebugInf, DiLabel)]): Unit = {
-      println(Console.RED + "Gen Metas" + Console.RESET)
       rep(metas, "\n") { case (di, lbl) =>
         genDiLabel(lbl)
         str(" = ")
@@ -581,7 +591,7 @@ object CodeGen {
 
     def genDiLabel(lbl: DiLabel): Unit = {
       str("!")
-      str(lbl.id)
+      str(genDiLabelIndex(lbl))
     }
 
     def genLoc(loc: Location): Unit = loc match {
@@ -593,7 +603,6 @@ object CodeGen {
     def genInst(inst: Inst)(implicit fresh: Fresh): Unit = inst match {
       case inst: Inst.Let =>
         genLet(inst)
-        genLoc(inst.loc)
 
       case Inst.Unreachable(_) =>
         newline()
@@ -656,6 +665,7 @@ object CodeGen {
 
       val op   = inst.op
       val name = inst.name
+      val loc  = inst.loc
 
       def genBind() =
         if (!isVoid(op.resty)) {
@@ -691,6 +701,7 @@ object CodeGen {
           genType(ty)
           str("* %")
           genLocal(pointee)
+          genLoc(loc)
 
         case Op.Store(ty, ptr, value, isVolatile) =>
           val pointee = fresh()
@@ -715,6 +726,7 @@ object CodeGen {
           genType(ty)
           str("* %")
           genLocal(pointee)
+          genLoc(loc)
 
         case Op.Elem(ty, ptr, indexes) =>
           val pointee = fresh()
@@ -748,6 +760,8 @@ object CodeGen {
           str("* %")
           genLocal(derived)
           str(" to i8*")
+          genLoc(loc)
+
 
         case Op.Stackalloc(ty, n) =>
           val pointee = fresh()
@@ -769,6 +783,7 @@ object CodeGen {
           str("* %")
           genLocal(pointee)
           str(" to i8*")
+          genLoc(loc)
 
         case _ =>
           newline()

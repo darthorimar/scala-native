@@ -231,7 +231,7 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
   }
 
   private def getDiLabel(): DiLabel = {
-    DiLabel(getInt)
+    DiLabel(getString, getInt)
   }
 
   private def getDi(): DebugInf = getInt match {
