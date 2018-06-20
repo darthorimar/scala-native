@@ -40,8 +40,7 @@ object Defn {
                           loc: Location)
       extends Defn
 
-  final case class Meta(metas: Seq[(DebugInf, DiLabel)]) extends Defn {
-    override def name: Global  = Global.Meta
+  final case class Meta(name: Global, metas: Seq[(DebugInf, DiLabel)]) extends Defn {
     override def attrs: Attrs  = Attrs.None
     override def loc: Location = Location.None
   }

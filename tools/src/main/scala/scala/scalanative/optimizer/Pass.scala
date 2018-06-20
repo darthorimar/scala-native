@@ -38,6 +38,8 @@ trait Pass extends AnyPass {
       defn
     case defn @ Defn.Module(_, _, _, _, _) =>
       defn
+    case defn @ Defn.Meta(_, _) =>
+      defn
   }
 
   def onInsts(insts: Seq[Inst]): Seq[Inst] =

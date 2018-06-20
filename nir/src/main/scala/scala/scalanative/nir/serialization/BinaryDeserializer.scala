@@ -203,8 +203,7 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
       Defn.Module(getAttrs, getGlobal, getGlobalOpt, getGlobals, getLoc)
 
     case T.MetaDefn =>
-      println(Console.RED + "Deserialize META" + Console.RESET)
-      Defn.Meta(getSeq { (getDi, getDiLabel) })
+      Defn.Meta(getGlobal, getSeq { (getDi, getDiLabel) })
   }
 
   private def getGlobals(): Seq[Global]      = getSeq(getGlobal)

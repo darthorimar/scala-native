@@ -32,15 +32,16 @@ object Linker {
       val unresolved  = mutable.Set.empty[Global]
       val links       = mutable.Set.empty[Attr.Link]
       val defns       = mutable.UnrolledBuffer.empty[Defn]
-      val direct      = mutable.Stack.empty[Global]
+      val direct: mutable.Stack[Global]      = mutable.Stack.empty[Global]
       var conditional = mutable.UnrolledBuffer.empty[Dep.Conditional]
       val weaks       = mutable.Set.empty[Global]
       val signatures  = mutable.Set.empty[String]
       val dyndefns    = mutable.Set.empty[Global]
 
+      println(Console.GREEN +  "CONFIG IS" + Console.RESET)
       val classpath = config.classPath.map { p =>
         ClassPath(VirtualDirectory.real(p))
-      }
+      }.map { x => println(Console.MAGENTA +  "    " + x.entries.keys.map(_.id).mkString("\n         ") + Console.RESET); x }
       def load(global: Global) =
         classpath.collectFirst {
           case path if path.contains(global) =>
@@ -53,16 +54,21 @@ object Linker {
           val workitem = direct.pop()
           if (!workitem.isIntrinsic && !resolved.contains(workitem) &&
               !unresolved.contains(workitem)) {
+//            if (workitem.id.toLowerCase.contains("meta"))
+//              println(Console.CYAN + workitem.id + Console.RESET)
 
             load(workitem)
               .fold[Unit] {
                 unresolved += workitem
                 onUnresolved(workitem)
+//                println(Console.RED + "UNRESOLVED " + workitem.id + Console.RESET)
               } {
                 // If this definition is a stub, and linking stubs is disabled,
                 // then add this element to the `unresolved` items.
                 case (_, _, _, defn)
-                    if defn.attrs.isStub && !config.linkStubs =>
+                    if defn.attrs.isStub &&
+                      !config.linkStubs  &&
+                      !defn.isInstanceOf[Defn.Meta] =>
                   unresolved += workitem
                   onUnresolved(workitem)
 
@@ -85,10 +91,14 @@ object Linker {
                     }
 
                   onResolved(workitem)
+                  if (defn.name.id.toLowerCase.contains("test"))
+                    println(Console.RED + defn.name + Console.RESET)
 
                   deps.foreach {
                     case Dep.Direct(dep) =>
                       direct.push(dep)
+                      if (defn.name.id.toLowerCase.contains("test"))
+                        println("   " + Console.GREEN + dep.show + Console.RESET)
                       onDirectDependency(workitem, dep)
 
                     case cond @ Dep.Conditional(dep, condition) =>
@@ -146,7 +156,7 @@ object Linker {
 
       onComplete()
 
-      Result(unresolved.toSeq,
+      Result(Seq.empty,//unresolved.toSeq,
              links.toSeq,
              defnss.sortBy(_.name.toString),
              signatures.toSeq)

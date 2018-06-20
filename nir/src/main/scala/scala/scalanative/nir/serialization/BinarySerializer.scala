@@ -257,9 +257,9 @@ final class BinarySerializer(buffer: ByteBuffer) {
       putGlobals(ifaces)
       putLoc(loc)
 
-    case Defn.Meta(metas) =>
-      println(Console.RED + "Serialize META" + Console.RESET)
+    case Defn.Meta(name, metas) =>
       putInt(T.MetaDefn)
+      putGlobal(name)
       putSeq(metas) { case (di, lbl) =>
         putDi(di)
         putDiLabel(lbl)

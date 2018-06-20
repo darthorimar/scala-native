@@ -18,6 +18,8 @@ sealed trait ClassPath {
 
   /** Load all globals */
   private[scalanative] def globals: Set[Global]
+
+  def entries: Map[Global, BinaryDeserializer]
 }
 
 object ClassPath {
@@ -31,7 +33,7 @@ object ClassPath {
     new Impl(directory)
 
   private final class Impl(directory: VirtualDirectory) extends ClassPath {
-    private val entries: Map[Global, BinaryDeserializer] = {
+    val entries: Map[Global, BinaryDeserializer] = {
       directory.files
         .filter(_.toString.endsWith(".nir"))
         .map { file =>

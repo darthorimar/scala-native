@@ -580,7 +580,7 @@ object Show {
           str(" : ")
           rep(parents, sep = ", ")(global_)
         }
-      case Defn.Meta(metas) =>
+      case Defn.Meta(name, metas) =>
         rep(metas, "\n") { case (di, lbl) =>
           diLabel_(lbl)
           str(" = ")

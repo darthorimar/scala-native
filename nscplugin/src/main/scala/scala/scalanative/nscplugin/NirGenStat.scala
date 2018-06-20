@@ -64,8 +64,13 @@ trait NirGenStat { self: NirGenPhase =>
     private val buf          = mutable.UnrolledBuffer.empty[nir.Defn]
     def toSeq: Seq[nir.Defn] = buf
 
-    def genDi(): Unit = {
-      buf += Defn.Meta(curDiMan.get.getMetas)
+    def genDiName(sym: Symbol): Global = {
+      val id = genTypeName(sym).id + "!Meta"
+      Global.Member(genTypeName(sym), id)
+    }
+
+    def genDi(name: Global): Unit = {
+      buf += Defn.Meta(name, curDiMan.get.getMetas)
     }
 
     def genClass(cd: ClassDef): Unit = {
@@ -90,7 +95,8 @@ trait NirGenStat { self: NirGenPhase =>
       genMethods(cd)
     }
 
-    def genStructAttrs(sym: Symbol): Attrs = Attrs.None
+    def genStructAttrs(sym: Symbol): Attrs =
+      Attrs.None.copy(pins = Seq(Attr.PinAlways(genDiName(sym))))
 
     def genNormalClass(cd: ClassDef): Unit = {
       val sym    = cd.symbol
@@ -151,7 +157,9 @@ trait NirGenStat { self: NirGenPhase =>
           Attr.PinWeak(genMethodName(dd.symbol))
       }
 
-      Attrs.fromSeq(pinned ++ pure ++ attrs ++ weak)
+      val pinMeta = Attr.PinAlways(genDiName(sym))
+
+      Attrs.fromSeq(pinned ++ pure ++ attrs ++ weak :+ pinMeta)
     }
 
     def genClassInterfaces(sym: Symbol) =

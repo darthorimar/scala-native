@@ -159,7 +159,7 @@ object CodeGen {
       }
       defns.foreach { defn =>
         if (defn.isInstanceOf[Defn.Meta]) {
-          println(Console.BLUE + "NYA" + Console.RESET)
+          println(Console.BLUE + defn.name.id + Console.RESET)
           onDefn(defn)
         }
       }
@@ -202,7 +202,7 @@ object CodeGen {
         genFunctionDefn(attrs, name, sig, Seq(), Fresh())
       case Defn.Define(attrs, name, sig, insts, loc) =>
         genFunctionDefn(attrs, name, sig, insts, Fresh(insts))
-      case Defn.Meta(metas) =>
+      case Defn.Meta(name, metas) =>
         genMetas(metas)
       case defn =>
         unsupported(defn)
@@ -280,20 +280,28 @@ object CodeGen {
     }
 
     def genDi(di: DebugInf): Unit = di match {
-      case DILocation(line, column, scopeLbl) =>
+      case DebugInf.DILocation(line, column, scope) =>
         str("!DILocation(line: ")
         str(line)
         str(", column:")
         str(column)
         str(", scope: ")
-        genDiLabel(scopeLbl)
+        genDiLabel(scope)
         str(")")
-      case DIFile(filename, directory) =>
+      case DebugInf.DIFile(filename, directory) =>
         str("!DIFile(filename:\"")
         str(filename)
         str("\", directory: \"")
         str(directory)
         str("\")")
+      case DebugInf.DISubprogram(name, file, scope) =>
+        str("distinct !DISubprogram(name: \"")
+        str(name)
+        str("\", file: ")
+        genDiLabel(file)
+        str(", scope: ")
+        genDiLabel(scope)
+        str(")")
     }
 
     def genMetas(metas: Seq[(DebugInf, DiLabel)]): Unit = {

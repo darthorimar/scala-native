@@ -101,7 +101,7 @@ abstract class NirGenPhase
           curFile := file
         ) {
           buffer.genClass(cd)
-          buffer.genDi()
+          buffer.genDi(buffer.genDiName(cd.symbol))
           files += ((path, buffer.toSeq))
         }
       }
