@@ -194,7 +194,7 @@ trait NirGenStat { self: NirGenPhase =>
       val name  = dd.name.toString
       val scope = curMethodDebLbl.get
       val file  = curFile.get
-      DebugInf.DISubprogram(name, file, scope)
+      DebugInf.DISubprogram(name, dd.pos.line, file, scope)
     }
 
     def genMethod(dd: DefDef): Unit = {
@@ -216,7 +216,7 @@ trait NirGenStat { self: NirGenPhase =>
         val isStatic = owner.isExternModule || owner.isImplClass
         val sig      = genMethodSig(sym, isStatic)
         val params   = genParams(dd, isStatic)
-        val loc      = genLoc(dd.pos)
+        val loc      = Location.LocLabel(curMethodDebLbl.get)
 
         dd.rhs match {
           case EmptyTree =>
@@ -448,7 +448,10 @@ trait NirGenStat { self: NirGenPhase =>
           val params = genParams(apply, isStatic = true)
           val body =
             genNormalMethodBody(apply, params, apply.rhs, isStatic = true)
-          val loc = genLoc(apply.pos)
+          val loc = {
+            val diSubprogram = DebugInf.DISubprogram(name.id, apply.pos.line, curFile.get, curMethodDebLbl.get)
+            Location.LocLabel(curDiMan.genDiLabel(diSubprogram))
+          }
 
           buf += Defn.Define(attrs, name, sig, body, loc)
 

@@ -91,7 +91,7 @@ class ModuleLowering(implicit top: Top) extends Pass {
             initCall,
             Inst.Ret(alloc, loc)
           ),
-          loc
+          Location.None
         )
 
         buf += clsDefn

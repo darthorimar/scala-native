@@ -296,9 +296,10 @@ final class BinarySerializer(buffer: ByteBuffer) {
       putInt(line)
       putInt(column)
       putDiLabel(scopeLbl)
-    case DebugInf.DISubprogram(name, file, scope) =>
+    case DebugInf.DISubprogram(name, line, file, scope) =>
       putInt(T.DISubprogram)
       putString(name)
+      putInt(line)
       putDiLabel(file)
       putDiLabel(scope)
   }

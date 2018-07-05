@@ -180,11 +180,10 @@ object CodeGen {
 
     def genDiHeaders(): Unit = {
       newline()
-      str("!llvm.module.flags = !{!1, !2, !3}")
-      str("!1 = !{i32 2, !\"Dwarf Version\", i32 2}")
-      str("!2 = !{i32 2, !\"Debug Info Version\", i32 3}")
-      str("!3 = !{i32 1, !\"PIC Level\", i32 2}")
-      newline()
+      line("!llvm.module.flags = !{!1, !2}")
+      line("!1 = !{i32 2, !\"Dwarf Version\", i32 4}")
+      line("!2 = !{i32 2, !\"Debug Info Version\", i32 3}")
+      line("!3 = !{}")
     }
 
     def genPrelude(): Unit = {
@@ -221,9 +220,9 @@ object CodeGen {
       case Defn.Const(attrs, name, ty, rhs, loc) =>
         genGlobalDefn(attrs, name, isConst = true, ty, rhs)
       case Defn.Declare(attrs, name, sig, loc) =>
-        genFunctionDefn(attrs, name, sig, Seq(), Fresh())
+        genFunctionDefn(attrs, name, sig, Seq(), Fresh(), loc)
       case Defn.Define(attrs, name, sig, insts, loc) =>
-        genFunctionDefn(attrs, name, sig, insts, Fresh(insts))
+        genFunctionDefn(attrs, name, sig, insts, Fresh(insts), loc)
       case defn =>
         unsupported(defn)
     }
@@ -261,7 +260,8 @@ object CodeGen {
                         name: Global,
                         sig: Type,
                         insts: Seq[Inst],
-                        fresh: Fresh): Unit = {
+                        fresh: Fresh,
+                        loc: Location): Unit = {
       val Type.Function(argtys, retty) = sig
 
       val isDecl = insts.isEmpty
@@ -289,6 +289,7 @@ object CodeGen {
         str(gxxpersonality)
       }
       if (!isDecl) {
+        genLoc(loc, needComma = false)
         str(" {")
         val cfg = CFG(insts)
         cfg.foreach { block =>
@@ -314,11 +315,13 @@ object CodeGen {
         str("\", directory: \"")
         str(directory)
         str("\")")
-      case DebugInf.DISubprogram(name, file, scope) =>
-        str("distinct !DISubprogram(name: \"")
+      case DebugInf.DISubprogram(name, line, file, scope) =>
+        str("distinct !DISubprogram(isLocal: false, variables: !4, isDefinition: true, name: \"")
         str(name)
         str("\", file: ")
         genDiLabel(file)
+        str(", line: ")
+        str(line)
         str(", scope: ")
         genDiLabel(scope)
         str(")")
@@ -603,10 +606,10 @@ object CodeGen {
       str(genDiLabelIndex(lbl))
     }
 
-    def genLoc(loc: Location): Unit = loc match {
+    def genLoc(loc: Location, needComma: Boolean = true): Unit = loc match {
       case Location.None =>
       case LocLabel(lbl) =>
-        genDbg(lbl)
+        genDbg(lbl, needComma)
     }
 
     def genInst(inst: Inst)(implicit fresh: Fresh): Unit = inst match {
@@ -934,8 +937,10 @@ object CodeGen {
         unsupported(op)
     }
 
-    def genDbg(lbl: DiLabel): Unit = {
-      str(", !dbg ")
+    def genDbg(lbl: DiLabel, needComma: Boolean): Unit = {
+      if (needComma)
+        str(",")
+      str(" !dbg ")
       genDiLabel(lbl)
     }
 

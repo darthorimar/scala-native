@@ -50,12 +50,14 @@ object Show {
         str(", ")
         diLabel_(scopeLbl)
         str(")")
-      case DebugInf.DISubprogram(name, file, scope) =>
+      case DebugInf.DISubprogram(name, line,  file, scope) =>
         str("DISubprogram(")
         str(name)
-        str(":, ")
+        str(", line:")
+        str(line)
+        str(", file: ")
         diLabel_(file)
-        str(", ")
+        str(", scope: ")
         diLabel_(scope)
         str(")")
     }

@@ -240,7 +240,7 @@ final class BinaryDeserializer(_buffer: => ByteBuffer) {
     case T.DILocation =>
       DebugInf.DILocation(getInt, getInt, getDiLabel)
     case T.DISubprogram =>
-      DebugInf.DISubprogram(getString, getDiLabel, getDiLabel)
+      DebugInf.DISubprogram(getString, getInt, getDiLabel, getDiLabel)
   }
 
   private def getNexts(): Seq[Next] = getSeq(getNext)
